@@ -17,7 +17,7 @@ import java.net.URL;
  * The code here is a simple Gaussian blur using ImageJ Ops.
  * </p>
  */
-@Plugin(type = Command.class, menuPath = "Plugins>Gauss Filtering")
+@Plugin(type = Command.class, menuPath = "Plugins>BIOP>Dummy Command")
 public class DummyCommand implements Command {
 
     @Parameter
