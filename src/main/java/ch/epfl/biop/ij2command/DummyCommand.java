@@ -1,6 +1,8 @@
 package ch.epfl.biop.ij2command;
 
 import net.imagej.ImageJ;
+
+import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.platform.PlatformService;
 import org.scijava.plugin.Parameter;
@@ -14,26 +16,37 @@ import java.net.URL;
  * This example illustrates how to create an ImageJ 2 {@link Command} plugin.
  * The pom file of this project is customized for the PTBIOP Organization (biop.epfl.ch)
  * <p>
- * The code here is a simple Gaussian blur using ImageJ Ops.
+ * The code here is opening the biop website. The command can be tested in the java DummyCommandTest class.
  * </p>
  */
+
 @Plugin(type = Command.class, menuPath = "Plugins>BIOP>Dummy Command")
 public class DummyCommand implements Command {
 
     @Parameter
-    private UIService uiService;
+    UIService uiService;
 
     @Parameter
     PlatformService ps;
+
+    @Parameter
+    int number1;
+
+    @Parameter
+    int number2;
+
+    @Parameter(type = ItemIO.OUTPUT)
+    int the_answer_to_everything;
 
     @Override
     public void run() {
         uiService.show("Hello from the BIOP!");
         try {
-            ps.open(new URL("http://biop.epfl.ch"));
+            ps.open(new URL("https://biop.epfl.ch"));
         } catch (IOException e) {
             e.printStackTrace();
         }
+        the_answer_to_everything = 42;
     }
 
     /**
@@ -51,5 +64,4 @@ public class DummyCommand implements Command {
 
         ij.command().run(DummyCommand.class, true);
     }
-
 }

@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>22.3.0</version>
+		<version>26.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -121,8 +121,8 @@
 	</ciManagement>
 
 	<properties>
-		<package-name>ch.epfl.biop.aba</package-name>
-		<main-class>ch.epfl.biop.aba.DummyCommand</main-class>
+		<package-name>ch.epfl.biop.ij2command</package-name>
+		<main-class>ch.epfl.biop.ij2command.DummyCommand</main-class>
 		<license.licenseName>N/A</license.licenseName>
 		<license.copyrightOwners>N/A</license.copyrightOwners>
 	</properties>
@@ -138,6 +138,12 @@
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>
