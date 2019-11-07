@@ -128,8 +128,10 @@
 	<properties>
 		<package-name>ch.epfl.biop.ij2command</package-name>
 		<main-class>ch.epfl.biop.ij2command.DummyCommand</main-class>
-		<license.licenseName>N/A</license.licenseName>
-		<license.copyrightOwners>N/A</license.copyrightOwners>
+		<license.licenseName>gpl_v3</license.licenseName>
+		<license.copyrightOwners>EPFL</license.copyrightOwners>
+		<scijava.app.directory>C:/Fiji_template</scijava.app.directory>
+		<scijava.app.subdirectory>plugins/BIOP</scijava.app.subdirectory>
 	</properties>
 
 	<repositories>
