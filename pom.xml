@@ -33,7 +33,7 @@
 
 	<developers>
 		<developer>
-			<id>oburri</id>
+			<id>lacan</id>
 			<name>Olivier Burri</name>
 			<url>http://biop.epfl.ch/INFO_Facility.html</url>
 			<roles>
@@ -92,7 +92,13 @@
 			<name>Olivier Burri</name>
 			<url>http://biop.epfl.ch/INFO_Facility.html</url>
 			<roles><role>founder</role></roles>
-			<properties><id>oburri</id></properties>
+			<properties><id>lacan</id></properties>
+		</contributor>
+		<contributor>
+			<name>Arne Seitz</name>
+			<url>http://biop.epfl.ch/INFO_Facility.html</url>
+			<roles><role>founder</role></roles>
+			<properties><id>ArneS70</id></properties>
 		</contributor>
 	</contributors>
 
