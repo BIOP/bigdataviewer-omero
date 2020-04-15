@@ -35,7 +35,7 @@
 		<developer>
 			<id>lacan</id>
 			<name>Olivier Burri</name>
-			<url>http://biop.epfl.ch/INFO_Facility.html</url>
+			<url>https://www.epfl.ch/research/facilities/ptbiop/staff/</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -49,7 +49,7 @@
 		<developer>
 			<id>nicokiaru</id>
 			<name>Nicolas Chiaruttini</name>
-			<url>http://imagej.net/User:NicoKiaru</url>
+			<url>https://www.epfl.ch/research/facilities/ptbiop/staff/</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -63,7 +63,7 @@
 		<developer>
 			<id>romainGuiet</id>
 			<name>Romain Guiet</name>
-			<url>http://biop.epfl.ch/INFO_Facility.html</url>
+			<url>https://www.epfl.ch/research/facilities/ptbiop/staff/</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
