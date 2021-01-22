@@ -35,12 +35,15 @@ public class DummyCommand implements Command {
     @Parameter
     int number2;
 
+    @Parameter(label = "What is your nickname?")
+    String name;
+
     @Parameter(type = ItemIO.OUTPUT)
     int the_answer_to_everything;
 
     @Override
     public void run() {
-        uiService.show("Hello from the BIOP!");
+        uiService.show("Hello from the BIOP! Happy new year "+name+" !");
         try {
             ps.open(new URL("https://biop.epfl.ch"));
         } catch (IOException e) {
