@@ -106,61 +106,6 @@ public class OmeroOpenImageCommand implements Command {
         return gateway;
     }
 
-    /*
-    Boolean uploadImage(int image_path,Gateway gateway,int datasetID){
-        String[] path = new String[1];
-        path[0] = image_path;
-
-        user = gateway.getLoggedInUser();
-        def ctx = new SecurityContext(user.getGroupId());
-        sessionKey = gateway.getSessionId(user);
-
-        def config = new ImportConfig();
-
-        config.email.set("");
-        config.sendFiles.set('true');
-        config.sendReport.set('false');
-        config.contOnError.set('false');
-        config.debug.set('false');
-        config.hostname.set(HOST);
-        config.sessionKey.set(sessionKey);
-        config.targetClass.set("omero.model.Dataset");
-        //config.targetId.set(datasetId);
-
-        dataset = find_dataset(gateway, dataset_id);
-
-        loci.common.DebugTools.enableLogging("DEBUG");
-
-        store = config.createStore();
-        def reader = new OMEROWrapper(config);
-
-        def library = new ImportLibrary(store,reader);
-        def errorHandler = new ErrorHandler(config);
-
-        library.addObserver(new LoggingImportMonitor());
-
-        def candidates = new ImportCandidates (reader, path, errorHandler);
-        //println ( candidates );
-
-        reader.setMetadataOptions(new DefaultMetadataOptions( MetadataLevel.ALL ) );
-        containers = candidates.getContainers();
-        index = 0;
-        containers.each() { c ->
-                c.setTarget(dataset);
-            // pixels is a list from there you can then access the Image ID
-            pixels = library.importImage(c, index, 0, 0); // deprecated : https://downloads.openmicroscopy.org/omero/5.4.8/api/ome/formats/importer/ImportLibrary.html
-            // to be replace by : importImage(ImportContainer container, java.util.concurrent.ExecutorService threadPool, int index)
-            pixels.each{
-                println "New Image ID: " + it.getId().getValue();
-            }
-
-            index++;
-        }
-        //def success = library.importCandidates(config, candidates)
-        //println ( config.getTarget().getObjectId()  )
-        // println success
-        return true;
-    }*/
 
     IObject find_dataset(Gateway gateway, long datasetID) throws Exception{
         //"Load the Dataset"
