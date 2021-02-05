@@ -13,13 +13,13 @@
 	</parent>
 
 	<groupId>ch.epfl.biop</groupId>
-	<artifactId>DummyCommand</artifactId>
+	<artifactId>ImageJ_play_Claire</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
-	<name>Biop Dummy Command</name>
-	<description>A Maven project implementing an ImageJ command - template for BIOP - EPFL</description>
+	<name>ImageJ play Claire</name>
+	<description>A nice project implementing an OMERO connection with ImageJ</description>
 	<url>http://biop.epfl.ch</url>
-	<inceptionYear>2020</inceptionYear>
+	<inceptionYear>2021</inceptionYear>
 	<organization>
 		<name>BIOP</name>
 		<url>http://biop.epfl.ch</url>
@@ -147,7 +147,7 @@
 
 	<properties>
 		<package-name>ch.epfl.biop.ij2command</package-name>
-		<main-class>ch.epfl.biop.ij2command.DummyCommand</main-class>
+		<main-class>ch.epfl.biop.ij2command.OmeroOpenImageCommand</main-class>
 		<license.licenseName>gpl_v3</license.licenseName>
 		<license.copyrightOwners>EPFL</license.copyrightOwners>
 		<scijava.app.directory>C:/Fiji_template</scijava.app.directory>
@@ -167,9 +167,21 @@
 			<artifactId>imagej</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-legacy</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.openmicroscopy</groupId>
+			<artifactId>omero-gateway</artifactId>
+			<!--<version>5.6.5</version> -->
+		</dependency>
 	</dependencies>
+
 </project>
+
+
