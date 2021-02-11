@@ -152,6 +152,8 @@
 		<license.copyrightOwners>EPFL</license.copyrightOwners>
 		<scijava.app.directory>C:/Fiji_template</scijava.app.directory>
 		<scijava.app.subdirectory>plugins/BIOP</scijava.app.subdirectory>
+		<ice.version>3.6.4</ice.version>
+		<glacier2.version>${ice.version}</glacier2.version>
 	</properties>
 
 	<repositories>
@@ -180,6 +182,49 @@
 			<artifactId>omero-gateway</artifactId>
 			<!--<version>5.6.5</version> -->
 		</dependency>
+
+		<!-- OME dependencies -->
+		<dependency>
+			<groupId>com.zeroc</groupId>
+			<artifactId>glacier2</artifactId>
+			<version>${glacier2.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.zeroc</groupId>
+			<artifactId>ice</artifactId>
+			<version>${ice.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openmicroscopy</groupId>
+			<artifactId>ome-xml</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.openmicroscopy</groupId>
+			<artifactId>omero-blitz</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.openmicroscopy</groupId>
+			<artifactId>omero-gateway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.openmicroscopy</groupId>
+			<artifactId>omero-model</artifactId>
+		</dependency>
+
+
+		<!-- dependencies added by nico - test -->
+		<dependency>
+			<groupId>net.imagej</groupId>
+			<artifactId>imagej-omero</artifactId>
+			<version>1.0.0-5.5-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>ome</groupId>
+			<artifactId>bio-formats_plugins</artifactId>
+			<version>6.6.0</version>
+		</dependency>
+
 	</dependencies>
 
 </project>
