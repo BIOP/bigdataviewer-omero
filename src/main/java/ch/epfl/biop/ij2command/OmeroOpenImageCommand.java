@@ -1,5 +1,6 @@
 package ch.epfl.biop.ij2command;
 
+import loci.plugins.LociImporter;
 import net.imagej.ImageJ;
 import omero.gateway.Gateway;
 import omero.gateway.LoginCredentials;
@@ -57,7 +58,7 @@ public class OmeroOpenImageCommand implements Command {
     @Parameter(label = "Enter your gaspar username")
     String username;
 
-    @Parameter(label = "Enter your gaspar password", style = "password")
+    @Parameter(label = "Enter your gaspar password", style = "password", persist = false)
     String password;
 
     @Parameter(label = "Enter the ID of your OMERO image")
@@ -82,7 +83,7 @@ public class OmeroOpenImageCommand implements Command {
             System.out.println( "Session active : "+gateway.isConnected() );
             openImagePlus(host,username,password,groupID,imageID);
             System.out.println( "Disconnecting...");
-            gateway.disconnect();
+           // gateway.disconnect();
             System.out.println( "Session active : "+gateway.isConnected() );
         }
         catch(Exception e) { e.printStackTrace();
@@ -129,9 +130,14 @@ public class OmeroOpenImageCommand implements Command {
         options += "\niid=";
         options += imageID;
         options += "]";
+        //options += " use_virtual_stack";
         options += " windowless=true ";
 
         IJ.runPlugIn("loci.plugins.LociImporter",  options);
+
+        // LociImporter li = new LociImporter();
+
+
     }
 
 

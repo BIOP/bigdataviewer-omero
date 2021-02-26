@@ -211,6 +211,11 @@
 			<artifactId>omero-model</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigdataviewer_fiji</artifactId>
+		</dependency>
+
 
 		<!-- dependencies added by nico - test -->
 		<dependency>
