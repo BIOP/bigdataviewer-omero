@@ -35,13 +35,29 @@ import ome.formats.importer.cli.*;
 import loci.formats.in.DefaultMetadataOptions;
 import loci.formats.in.MetadataLevel;
 
-/**
- * This example illustrates how to create an ImageJ 2 {@link Command} plugin.
- * The pom file of this project is customized for the PTBIOP Organization (biop.epfl.ch)
- * <p>
- * The code here is opening the biop website. The command can be tested in the java DummyCommandTest class.
- * </p>
- */
+//Nouvelle copie
+
+import bdv.util.BdvFunctions;
+import bdv.util.BdvStackSource;
+import bdv.util.volatiles.VolatileViews;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.process.ImageProcessor;
+import net.imagej.ImageJ;
+import net.imglib2.*;
+import net.imglib2.cache.img.CellLoader;
+import net.imglib2.cache.img.ReadOnlyCachedCellImgFactory;
+import net.imglib2.cache.img.ReadOnlyCachedCellImgOptions;
+import net.imglib2.cache.img.SingleCellArrayImg;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
+import org.scijava.command.Command;
+import org.scijava.plugin.Parameter;
+import org.scijava.plugin.Plugin;
+
+import java.util.function.Consumer;
+
+
 
 @Plugin(type = Command.class, menuPath = "Plugins>BIOP>OmeroTiling")
 public class OmeroTilingCommand implements Command {
@@ -64,18 +80,16 @@ public class OmeroTilingCommand implements Command {
     @Parameter(label = "Enter the ID of your OMERO image")
     long imageID;
 
-    //@Parameter(label = "Enter the ID of your OMERO dataset")
-    //long datasetID;
-
-    //@Parameter(label = "Enter the ID of your OMERO group")
-    //long groupID;
-
     static int port = 4064;
 
+   // @Parameter
+   // ImagePlus image;
+
+    int index = 1;
 
     @Override
     public void run() {
-        //uiService.show("Hello from the BIOP! Happy new year "+username+" !");
+        // Run the function
         // Connect to Omero
         // https://downloads.openmicroscopy.org/omero/5.4.10/api/omero/gateway/Gateway.html
         try {
@@ -83,12 +97,62 @@ public class OmeroTilingCommand implements Command {
             System.out.println( "Session active : "+gateway.isConnected() );
             openImagePlus(host,username,password,imageID);
             System.out.println( "Disconnecting...");
-            // gateway.disconnect();
+            //gateway.disconnect();
             System.out.println( "Session active : "+gateway.isConnected() );
+
+            ImagePlus image = WindowManager.getCurrentImage();
+            //image.show();
+            // Read image dimensions and set total dimensions of the tiled image accordingly
+            long[] total_dim = new long[2];
+            total_dim[0] = image.getWidth()*image.getNSlices();
+            total_dim[1] = image.getHeight();
+            System.out.println("xdim : " + total_dim[0]+" ydim : " +total_dim[1]);
+
+            // Create cached image factory of Type Byte
+            ReadOnlyCachedCellImgOptions options = new ReadOnlyCachedCellImgOptions();
+            // Put cell dimensions to image width and height
+            options = options.cellDimensions(image.getWidth(),image.getHeight());
+            final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory(options);
+
+            UnsignedShortType t = new UnsignedShortType();
+
+            CellLoader<UnsignedShortType> loader = new CellLoader<UnsignedShortType>(){
+                @Override
+                public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
+
+                    ImageProcessor ip = image.getStack().getProcessor(index);
+
+                    long[] positions = new long[2];
+                    Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
+
+                    final long cellOffset = - (index-1)*image.getWidth();
+
+
+                    // move through pixels until there is no pixel left in this cell
+                    while (cursor.hasNext())
+                    {
+                        // move the cursor forward by one pixel
+                        cursor.fwd();
+                        //get the current position
+                        cursor.localize(positions);
+                        long px = positions[0] + cellOffset;
+                        long py = positions[1];
+                        //get pixel value of the input image (from stack) at pos (px,py) and copy it to the current cell at the same position
+                        cursor.get().set(ip.getPixel((int) px,(int) py));
+                    }
+                    index = index+1;
+                }
+            };
+            RandomAccessibleInterval<UnsignedShortType> randomAccessible = factory.create(total_dim, t,loader);
+            //ask if pixel has already been loaded or not
+            RandomAccessibleInterval volatilerandomAccessible = VolatileViews.wrapAsVolatile(randomAccessible);
+            BdvStackSource bss = BdvFunctions.show(volatilerandomAccessible,"Tiling");
+            bss.setDisplayRange(0, 1500);
         }
         catch(Exception e) { e.printStackTrace();
         }
     }
+
 
     Gateway omeroConnect(String hostname, int port, String userName, String password)throws Exception{
         //Omero Connect with credentials and simpleLogger
@@ -103,13 +167,6 @@ public class OmeroTilingCommand implements Command {
         return gateway;
     }
 
-    IObject find_dataset(Gateway gateway, long datasetID) throws Exception{
-        //"Load the Dataset"
-        BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
-        ExperimenterData user = gateway.getLoggedInUser();
-        SecurityContext ctx = new SecurityContext(user.getGroupId());
-        return browse.findIObject( ctx, "omero.model.Dataset", datasetID);
-    }
 
     void openImagePlus(String host,String username,String password,long imageID){
         String options = "";
@@ -142,7 +199,6 @@ public class OmeroTilingCommand implements Command {
     public static void main(final String... args) throws Exception {
         // create the ImageJ application context with all available services
         final ImageJ ij = new ImageJ();
-        ij.ui().showUI();
         ij.ui().showUI();
 
         ij.command().run(OmeroTilingCommand.class, true);

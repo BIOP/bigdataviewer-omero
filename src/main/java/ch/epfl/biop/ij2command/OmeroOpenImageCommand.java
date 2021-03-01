@@ -83,7 +83,7 @@ public class OmeroOpenImageCommand implements Command {
             System.out.println( "Session active : "+gateway.isConnected() );
             openImagePlus(host,username,password,imageID);
             System.out.println( "Disconnecting...");
-           // gateway.disconnect();
+            gateway.disconnect();
             System.out.println( "Session active : "+gateway.isConnected() );
         }
         catch(Exception e) { e.printStackTrace();

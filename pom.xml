@@ -183,6 +183,11 @@
 			<artifactId>bio-formats_plugins</artifactId>
 			<version>6.6.0</version>
 		</dependency>
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigdataviewer-vistools</artifactId>
+			<!--<version>1.0.0-beta-4</version> -->
+		</dependency>
 
 	</dependencies>
 
