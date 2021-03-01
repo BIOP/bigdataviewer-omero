@@ -33,36 +33,8 @@
 
 	<developers>
 		<developer>
-			<id>lacan</id>
-			<name>Olivier Burri</name>
-			<url>https://www.epfl.ch/research/facilities/ptbiop/staff/</url>
-			<roles>
-				<role>founder</role>
-				<role>lead</role>
-				<role>developer</role>
-				<role>debugger</role>
-				<role>reviewer</role>
-				<role>support</role>
-				<role>maintainer</role>
-			</roles>
-		</developer>
-		<developer>
 			<id>nicokiaru</id>
 			<name>Nicolas Chiaruttini</name>
-			<url>https://www.epfl.ch/research/facilities/ptbiop/staff/</url>
-			<roles>
-				<role>founder</role>
-				<role>lead</role>
-				<role>developer</role>
-				<role>debugger</role>
-				<role>reviewer</role>
-				<role>support</role>
-				<role>maintainer</role>
-			</roles>
-		</developer>
-		<developer>
-			<id>romainGuiet</id>
-			<name>Romain Guiet</name>
 			<url>https://www.epfl.ch/research/facilities/ptbiop/staff/</url>
 			<roles>
 				<role>founder</role>
@@ -91,28 +63,10 @@
 	</developers>
 	<contributors>
 		<contributor>
-			<name>Romain Guiet</name>
-			<url>http://biop.epfl.ch/INFO_Facility.html</url>
-			<roles><role>founder</role></roles>
-			<properties><id>romainGuiet</id></properties>
-		</contributor>
-		<contributor>
 			<name>Nicolas Chiaruttini</name>
 			<url>http://biop.epfl.ch/INFO_Facility.html</url>
 			<roles><role>founder</role></roles>
 			<properties><id>NicoKiaru</id></properties>
-		</contributor>
-		<contributor>
-			<name>Olivier Burri</name>
-			<url>http://biop.epfl.ch/INFO_Facility.html</url>
-			<roles><role>founder</role></roles>
-			<properties><id>lacan</id></properties>
-		</contributor>
-		<contributor>
-			<name>Arne Seitz</name>
-			<url>http://biop.epfl.ch/INFO_Facility.html</url>
-			<roles><role>founder</role></roles>
-			<properties><id>ArneS70</id></properties>
 		</contributor>
 		<contributor>
 			<name>Claire Stoffel</name>

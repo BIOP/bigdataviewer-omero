@@ -43,8 +43,8 @@ import loci.formats.in.MetadataLevel;
  * </p>
  */
 
-@Plugin(type = Command.class, menuPath = "Plugins>BIOP>OpenOmeroImage")
-public class OmeroOpenImageCommand implements Command {
+@Plugin(type = Command.class, menuPath = "Plugins>BIOP>OmeroTiling")
+public class OmeroTilingCommand implements Command {
 
     @Parameter
     UIService uiService;
@@ -83,7 +83,7 @@ public class OmeroOpenImageCommand implements Command {
             System.out.println( "Session active : "+gateway.isConnected() );
             openImagePlus(host,username,password,imageID);
             System.out.println( "Disconnecting...");
-           // gateway.disconnect();
+            // gateway.disconnect();
             System.out.println( "Session active : "+gateway.isConnected() );
         }
         catch(Exception e) { e.printStackTrace();
@@ -143,8 +143,9 @@ public class OmeroOpenImageCommand implements Command {
         // create the ImageJ application context with all available services
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
+        ij.ui().showUI();
 
-        ij.command().run(OmeroOpenImageCommand.class, true);
+        ij.command().run(OmeroTilingCommand.class, true);
     }
 
 }
