@@ -99,58 +99,59 @@ public class OmeroTilingCommand implements Command {
             System.out.println( "Disconnecting...");
             //gateway.disconnect();
             System.out.println( "Session active : "+gateway.isConnected() );
-
-            ImagePlus image = WindowManager.getCurrentImage();
-            //image.show();
-            // Read image dimensions and set total dimensions of the tiled image accordingly
-            long[] total_dim = new long[2];
-            total_dim[0] = image.getWidth()*image.getNSlices();
-            total_dim[1] = image.getHeight();
-            System.out.println("xdim : " + total_dim[0]+" ydim : " +total_dim[1]);
-
-            // Create cached image factory of Type Byte
-            ReadOnlyCachedCellImgOptions options = new ReadOnlyCachedCellImgOptions();
-            // Put cell dimensions to image width and height
-            options = options.cellDimensions(image.getWidth(),image.getHeight());
-            final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory(options);
-
-            UnsignedShortType t = new UnsignedShortType();
-
-            CellLoader<UnsignedShortType> loader = new CellLoader<UnsignedShortType>(){
-                @Override
-                public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
-
-                    ImageProcessor ip = image.getStack().getProcessor(index);
-
-                    long[] positions = new long[2];
-                    Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
-
-                    final long cellOffset = - (index-1)*image.getWidth();
-
-
-                    // move through pixels until there is no pixel left in this cell
-                    while (cursor.hasNext())
-                    {
-                        // move the cursor forward by one pixel
-                        cursor.fwd();
-                        //get the current position
-                        cursor.localize(positions);
-                        long px = positions[0] + cellOffset;
-                        long py = positions[1];
-                        //get pixel value of the input image (from stack) at pos (px,py) and copy it to the current cell at the same position
-                        cursor.get().set(ip.getPixel((int) px,(int) py));
-                    }
-                    index = index+1;
-                }
-            };
-            RandomAccessibleInterval<UnsignedShortType> randomAccessible = factory.create(total_dim, t,loader);
-            //ask if pixel has already been loaded or not
-            RandomAccessibleInterval volatilerandomAccessible = VolatileViews.wrapAsVolatile(randomAccessible);
-            BdvStackSource bss = BdvFunctions.show(volatilerandomAccessible,"Tiling");
-            bss.setDisplayRange(0, 1500);
         }
         catch(Exception e) { e.printStackTrace();
         }
+
+        ImagePlus image = WindowManager.getCurrentImage();
+        //image.show();
+        // Read image dimensions and set total dimensions of the tiled image accordingly
+        long[] total_dim = new long[2];
+        total_dim[0] = image.getWidth()*image.getNSlices();
+        total_dim[1] = image.getHeight();
+        System.out.println("xdim : " + total_dim[0]+" ydim : " +total_dim[1]);
+
+        // Create cached image factory of Type Byte
+        ReadOnlyCachedCellImgOptions options = new ReadOnlyCachedCellImgOptions();
+        // Put cell dimensions to image width and height
+        options = options.cellDimensions(image.getWidth(),image.getHeight());
+        final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory(options);
+
+        UnsignedShortType t = new UnsignedShortType();
+
+        CellLoader<UnsignedShortType> loader = new CellLoader<UnsignedShortType>(){
+            @Override
+            public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
+
+                ImageProcessor ip = image.getStack().getProcessor(index);
+
+                long[] positions = new long[2];
+                Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
+
+                final long cellOffset = - (index-1)*image.getWidth();
+
+
+                // move through pixels until there is no pixel left in this cell
+                while (cursor.hasNext())
+                {
+                    // move the cursor forward by one pixel
+                    cursor.fwd();
+                    //get the current position
+                    cursor.localize(positions);
+                    long px = positions[0] + cellOffset;
+                    long py = positions[1];
+                    //get pixel value of the input image (from stack) at pos (px,py) and copy it to the current cell at the same position
+                    cursor.get().set(ip.getPixel((int) px,(int) py));
+                }
+                index = index+1;
+            }
+        };
+        RandomAccessibleInterval<UnsignedShortType> randomAccessible = factory.create(total_dim, t,loader);
+        //ask if pixel has already been loaded or not
+        RandomAccessibleInterval volatilerandomAccessible = VolatileViews.wrapAsVolatile(randomAccessible);
+        BdvStackSource bss = BdvFunctions.show(volatilerandomAccessible,"Tiling");
+        bss.setDisplayRange(0, 1500);
+
     }
 
 
