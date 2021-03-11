@@ -1,7 +1,10 @@
 package ch.epfl.biop.ij2command;
 
+import bdv.util.BdvHandle;
+import bdv.util.BdvOptions;
 import loci.plugins.LociImporter;
 import net.imagej.ImageJ;
+import net.imglib2.realtransform.AffineTransform3D;
 import omero.gateway.Gateway;
 import omero.gateway.LoginCredentials;
 import omero.gateway.SecurityContext;
@@ -54,6 +57,7 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import org.scijava.util.VersionUtils;
 
 import java.util.function.Consumer;
 
@@ -89,6 +93,7 @@ public class OmeroTilingCommand implements Command {
 
     @Override
     public void run() {
+        System.out.println(VersionUtils.getVersion(BdvHandle.class));
         // Run the function
         // Connect to Omero
         // https://downloads.openmicroscopy.org/omero/5.4.10/api/omero/gateway/Gateway.html
@@ -151,7 +156,12 @@ public class OmeroTilingCommand implements Command {
         RandomAccessibleInterval volatilerandomAccessible = VolatileViews.wrapAsVolatile(randomAccessible);
         BdvStackSource bss = BdvFunctions.show(volatilerandomAccessible,"Tiling");
         bss.setDisplayRange(0, 1500);
-
+        BdvOptions bdvOptions = new BdvOptions();
+        bdvOptions.addTo(bss.getBdvHandle());
+        AffineTransform3D transform3D = new AffineTransform3D();
+        transform3D.rotate(2,Math.PI/2.0);
+        bdvOptions.sourceTransform(transform3D);
+        bss = BdvFunctions.show(volatilerandomAccessible,"Tiling",bdvOptions);
     }
 
 
@@ -185,7 +195,7 @@ public class OmeroTilingCommand implements Command {
         //options += " use_virtual_stack";
         //options += " windowless=true ";
         IJ.runPlugIn("loci.plugins.LociImporter",  options);
-        // LociImporter li = new LociImporter();
+        LociImporter li = new LociImporter();
     }
 
 
