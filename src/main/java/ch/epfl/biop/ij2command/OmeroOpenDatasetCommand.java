@@ -1,34 +1,14 @@
 package ch.epfl.biop.ij2command;
 
 
-import bdv.util.BdvFunctions;
-import bdv.util.BdvStackSource;
-import bdv.util.volatiles.VolatileViews;
-import ij.ImagePlus;
-import ij.WindowManager;
-import ij.process.ImageProcessor;
 import net.imagej.ImageJ;
-import net.imglib2.Cursor;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.cache.img.CellLoader;
-import net.imglib2.cache.img.ReadOnlyCachedCellImgFactory;
-import net.imglib2.cache.img.ReadOnlyCachedCellImgOptions;
-import net.imglib2.cache.img.SingleCellArrayImg;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
 import omero.gateway.Gateway;
-import omero.gateway.SecurityContext;
-import omero.gateway.exception.DSAccessException;
-import omero.gateway.exception.DSOutOfServiceException;
-import omero.gateway.facility.BrowseFacility;
-import omero.gateway.model.ExperimenterData;
 import omero.gateway.model.ImageData;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.concurrent.ExecutionException;
 
 //New class for displaying all images from an OMERO Dataset in a tiled manner in BDV
 @Plugin(type = Command.class, menuPath = "Plugins>BIOP>OpenDataset")
@@ -62,7 +42,13 @@ public class OmeroOpenDatasetCommand implements Command {
         Collection<ImageData> images = OmeroTools.getImagesFromDataset(gateway, datasetID);
         gateway.disconnect();
 
-
+        /*
+        Iterator<ImageData> j = images.iterator();
+        ImageData image;
+        while (j.hasNext()) {
+            image = j.next();
+            // Do something
+        }*/
 
         for (ImageData img : images){
             long imageID = img.getId();
