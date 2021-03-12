@@ -101,7 +101,9 @@
 
 	<properties>
 		<package-name>ch.epfl.biop.ij2command</package-name>
-		<main-class>ch.epfl.biop.ij2command.OmeroOpenImageCommand</main-class>
+		<main-class>ch.epfl.biop.ij2command.OmeroTilingCommand</main-class>
+		<class>ch.epfl.biop.ij2command.OmeroOpenDatasetCommand</class>
+		<class>ch.epfl.biop.ij2command.OmeroOpenImageCommand</class>
 		<license.licenseName>gpl_v3</license.licenseName>
 		<license.copyrightOwners>EPFL</license.copyrightOwners>
 		<scijava.app.directory>C:/Fiji_template</scijava.app.directory>

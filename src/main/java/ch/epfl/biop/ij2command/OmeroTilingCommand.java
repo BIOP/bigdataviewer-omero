@@ -1,76 +1,39 @@
 package ch.epfl.biop.ij2command;
 
+import bdv.util.BdvFunctions;
 import bdv.util.BdvHandle;
 import bdv.util.BdvOptions;
+import bdv.util.BdvStackSource;
+import bdv.util.volatiles.VolatileViews;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.WindowManager;
+import ij.process.ImageProcessor;
 import loci.plugins.LociImporter;
 import net.imagej.ImageJ;
+import net.imglib2.Cursor;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.cache.img.CellLoader;
+import net.imglib2.cache.img.ReadOnlyCachedCellImgFactory;
+import net.imglib2.cache.img.ReadOnlyCachedCellImgOptions;
+import net.imglib2.cache.img.SingleCellArrayImg;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import omero.gateway.Gateway;
 import omero.gateway.LoginCredentials;
-import omero.gateway.SecurityContext;
-import omero.gateway.model.ExperimenterData;
-import omero.model.IObject;
-import org.scijava.ItemIO;
+import omero.log.SimpleLogger;
 import org.scijava.command.Command;
 import org.scijava.platform.PlatformService;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
-
-import java.io.IOException;
-
-
-//import os.*;
-//import os.path.*;
-
-import ij.*;
-import ij.IJ;
-
-//import omero.gateway.LoginCredentials
-//import omero.gateway.Gateway
-
-import omero.gateway.*;
-import omero.gateway.facility.BrowseFacility;
-
-import omero.log.SimpleLogger;
-import ome.formats.importer.*;
-import ome.formats.importer.cli.*;
-import loci.formats.in.DefaultMetadataOptions;
-import loci.formats.in.MetadataLevel;
-
-//Nouvelle copie
-
-import bdv.util.BdvFunctions;
-import bdv.util.BdvStackSource;
-import bdv.util.volatiles.VolatileViews;
-import ij.IJ;
-import ij.ImagePlus;
-import ij.ImageStack;
-import ij.process.ImageProcessor;
-import net.imagej.ImageJ;
-import net.imglib2.*;
-import net.imglib2.cache.img.CellLoader;
-import net.imglib2.cache.img.ReadOnlyCachedCellImgFactory;
-import net.imglib2.cache.img.ReadOnlyCachedCellImgOptions;
-import net.imglib2.cache.img.SingleCellArrayImg;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import org.scijava.command.Command;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
 import org.scijava.util.VersionUtils;
 
-import java.util.function.Consumer;
 
 
 
-@Plugin(type = Command.class, menuPath = "Plugins>BIOP>OmeroTiling")
+@Plugin(type = Command.class, menuPath = "Plugins>BIOP>Omero Tiling")
 public class OmeroTilingCommand implements Command {
-
-    @Parameter
-    UIService uiService;
-
-    @Parameter
-    PlatformService ps;
 
     @Parameter(label = "OMERO host")
     String host;
@@ -86,8 +49,6 @@ public class OmeroTilingCommand implements Command {
 
     static int port = 4064;
 
-   // @Parameter
-   // ImagePlus image;
 
     int index = 1;
 
@@ -207,6 +168,7 @@ public class OmeroTilingCommand implements Command {
      * @param args whatever, it's ignored
      * @throws Exception
      */
+
     public static void main(final String... args) throws Exception {
         // create the ImageJ application context with all available services
         final ImageJ ij = new ImageJ();
@@ -216,3 +178,5 @@ public class OmeroTilingCommand implements Command {
     }
 
 }
+
+
