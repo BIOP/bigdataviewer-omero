@@ -1,9 +1,17 @@
 package ch.epfl.biop.ij2command;
 
 
+import bdv.util.BdvFunctions;
+import bdv.util.BdvOptions;
+import bdv.util.BdvStackSource;
 import net.imagej.ImageJ;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.position.FunctionRealRandomAccessible;
+import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import omero.gateway.Gateway;
 import omero.gateway.model.ImageData;
+import omero.gateway.model.PixelsData;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -42,29 +50,31 @@ public class OmeroOpenDatasetCommand implements Command {
         Collection<ImageData> images = OmeroTools.getImagesFromDataset(gateway, datasetID);
         gateway.disconnect();
 
-        /*
-        Iterator<ImageData> j = images.iterator();
-        ImageData image;
-        while (j.hasNext()) {
-            image = j.next();
-            // Do something
-        }*/
+        int imageOffset = 0;
+        double[] translationvector = new double[3];
+
+
+        RandomAccessibleInterval volatilerandomAccessible = OmeroTools.openRandomAccessibleInterval(host, username, password, 3646, true);
+        BdvStackSource bss = BdvFunctions.show(volatilerandomAccessible,"OMERO Dataset");
+        //bdvOptions.addTo(bss.getBdvHandle());
 
         for (ImageData img : images){
             long imageID = img.getId();
+            volatilerandomAccessible = OmeroTools.openRandomAccessibleInterval(host, username, password, imageID, true);
 
-
-            //BdvStackSource bss = BdvFunctions.show(volatilerandomAccessible,"Tiling");
-            //bss.setDisplayRange(0, 1500);
-            /*BdvOptions bdvOptions = new BdvOptions();
+            BdvOptions bdvOptions = new BdvOptions();
             bdvOptions.addTo(bss.getBdvHandle());
             AffineTransform3D transform3D = new AffineTransform3D();
-            transform3D.rotate(2,Math.PI/2.0);
+            translationvector[1] = imageOffset;
+            System.out.println(imageOffset);
+            transform3D.translate(translationvector);
+            //transform3D.rotate(2,Math.PI/2.0);
             bdvOptions.sourceTransform(transform3D);
-            bss = BdvFunctions.show(volatilerandomAccessible,"Tiling",bdvOptions);
-            */
-
+            bss = BdvFunctions.show(volatilerandomAccessible,"OMERO Dataset",bdvOptions);
+            bss.setDisplayRange(0, 300);
+            imageOffset = imageOffset + img.getDefaultPixels().getSizeY();
         }
+
 
         } catch (Exception e) {
             e.printStackTrace();

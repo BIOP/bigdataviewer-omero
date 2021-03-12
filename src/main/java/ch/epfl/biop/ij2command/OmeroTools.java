@@ -66,8 +66,6 @@ public class OmeroTools {
     }
 
 
-
-
     public static Collection<ImageData> getImagesFromDataset(Gateway gateway, long DatasetID) throws Exception{
         //List all images contained in a Dataset
 
