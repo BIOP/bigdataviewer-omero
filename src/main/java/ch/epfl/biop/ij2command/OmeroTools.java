@@ -100,9 +100,7 @@ public class OmeroTools {
                 long[] positions = new long[2];
                 Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
                 cursor.localize(positions);
-                System.out.println("position 0 : " + positions[0]);
                 int index = (int) ((positions[0]+1)/image.getWidth() + 1);
-                System.out.println("index : " + index);
                 ImageProcessor ip = image.getStack().getProcessor(index);
                 final long channelOffset = - (index-1)*image.getWidth();
 

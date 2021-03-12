@@ -66,7 +66,6 @@ public class OmeroOpenDatasetCommand implements Command {
             bdvOptions.addTo(bss.getBdvHandle());
             AffineTransform3D transform3D = new AffineTransform3D();
             translationvector[1] = imageOffset;
-            System.out.println(imageOffset);
             transform3D.translate(translationvector);
             //transform3D.rotate(2,Math.PI/2.0);
             bdvOptions.sourceTransform(transform3D);
