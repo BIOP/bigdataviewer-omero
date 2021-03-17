@@ -6,6 +6,7 @@ import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
 import net.imagej.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.converter.read.BiConvertedRandomAccessibleInterval;
 import net.imglib2.position.FunctionRealRandomAccessible;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
@@ -54,20 +55,23 @@ public class OmeroOpenDatasetCommand implements Command {
         double[] translationvector = new double[3];
 
 
-        RandomAccessibleInterval volatilerandomAccessible = OmeroTools.openRandomAccessibleInterval(host, username, password, 3646, true);
-        BdvStackSource bss = BdvFunctions.show(volatilerandomAccessible,"OMERO Dataset");
+        RandomAccessibleInterval volatilerandomAccessible = null;
+        BdvStackSource bss = null;
         //bdvOptions.addTo(bss.getBdvHandle());
 
         for (ImageData img : images){
             long imageID = img.getId();
             volatilerandomAccessible = OmeroTools.openRandomAccessibleInterval(host, username, password, imageID, true);
 
+            if (imageOffset == 0) {
+                bss = BdvFunctions.show(volatilerandomAccessible,"OMERO Dataset");
+            }
+
             BdvOptions bdvOptions = new BdvOptions();
             bdvOptions.addTo(bss.getBdvHandle());
             AffineTransform3D transform3D = new AffineTransform3D();
             translationvector[1] = imageOffset;
             transform3D.translate(translationvector);
-            //transform3D.rotate(2,Math.PI/2.0);
             bdvOptions.sourceTransform(transform3D);
             bss = BdvFunctions.show(volatilerandomAccessible,"OMERO Dataset",bdvOptions);
             bss.setDisplayRange(0, 300);
