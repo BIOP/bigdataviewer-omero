@@ -41,7 +41,7 @@ public class RawPixels implements Command {
             gateway.disconnect();
 
             BdvStackSource bss = BdvFunctions.show(volatilerandomAccessible,"OMERO raw plane");
-            bss.setDisplayRange(0, 300);
+            bss.setDisplayRange(0, 1500);
 
         } catch (Exception e) {
             e.printStackTrace();

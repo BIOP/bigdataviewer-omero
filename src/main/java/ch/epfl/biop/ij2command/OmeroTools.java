@@ -187,6 +187,7 @@ public class OmeroTools {
 
         long[] total_dim = new long[2];
         total_dim[0] = sizeX*sizeZ*sizeC*sizeT;
+        System.out.println("total size : "+sizeZ*sizeC*sizeT);
         total_dim[1] = sizeY;
 
         // Create cached image factory of Type Byte
@@ -197,6 +198,8 @@ public class OmeroTools {
 
         UnsignedShortType type = new UnsignedShortType();
 
+
+
         CellLoader<UnsignedShortType> loader = new CellLoader<UnsignedShortType>(){
             @Override
             public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
@@ -204,15 +207,24 @@ public class OmeroTools {
                 Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
                 cursor.localize(positions);
 
-                int index = (int) ((positions[0]+1)/ pixels.getSizeX() + 1);
+                int index = (int) ((positions[0]+1)/ sizeX + 1);
                 //ImageProcessor ip = image.getStack().getProcessor(index);
-                final long channelOffset = - (index-1)*pixels.getSizeX();
-                System.out.println("offset " +channelOffset);
+                final long channelOffset = - (index-1)*sizeX;
                 // move through pixels until there is no pixel left in this cell
 
-                Plane2D plane2D = getRawPlane(gateway, imageID, 0, 0, index-1);
+                int c_index = (index-1) % sizeC;
+                int z_index = 0;
+                if (sizeZ > 1){
+                    z_index = (index-1)/sizeC;
+                }
+                int t_index = 0;
+                if (sizeT > 1) {
+                    t_index = (index - 1) / (sizeC * sizeZ);
+                }
+
+                Plane2D plane2D = getRawPlane(gateway, imageID, z_index, t_index, c_index);
                 double[][] pixelIntensities = plane2D.getPixelValues();
-                //System.out.println(pixelIntensities);
+
                 while (cursor.hasNext())
                 {
                     // move the cursor forward by one pixel
