@@ -38,8 +38,6 @@ public class OmeroOpenDatasetCommand implements Command {
 
     static int port = 4064;
 
-    int index = 1;
-
     @Override
     public void run() {
         // Run the function

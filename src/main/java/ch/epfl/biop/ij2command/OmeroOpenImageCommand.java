@@ -79,7 +79,7 @@ public class OmeroOpenImageCommand implements Command {
         // Connect to Omero
         // https://downloads.openmicroscopy.org/omero/5.4.10/api/omero/gateway/Gateway.html
         try {
-            Gateway gateway = omeroConnect(host, port, username, password);
+            Gateway gateway = OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
             openImagePlus(host,username,password,imageID);
             System.out.println( "Disconnecting...");
