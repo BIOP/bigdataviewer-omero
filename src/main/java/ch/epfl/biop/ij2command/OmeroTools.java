@@ -23,6 +23,7 @@ import omero.gateway.model.ImageData;
 import omero.gateway.model.PixelsData;
 import omero.gateway.rnd.Plane2D;
 import omero.log.SimpleLogger;
+import omero.model.enums.UnitsLength;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -184,6 +185,8 @@ public class OmeroTools {
         int sizeZ = pixels.getSizeZ();
         int sizeC = pixels.getSizeC();
         int sizeT = pixels.getSizeT();
+
+        //pixels.getPixelSizeX(UnitsLength.MILLIMETER);
 
         long[] total_dim = new long[2];
         total_dim[0] = sizeX*sizeZ*sizeC*sizeT;
