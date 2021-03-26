@@ -72,7 +72,7 @@ public class OmeroOpenDatasetCommand implements Command {
             transform3D.translate(translationvector);
             bdvOptions.sourceTransform(transform3D);
             bss = BdvFunctions.show(volatilerandomAccessible,"OMERO Dataset",bdvOptions);
-            bss.getBdvHandle().getViewerPanel().setNumTimepoints(150);
+            //bss.getBdvHandle().getViewerPanel().setNumTimepoints(150);
             bss.setDisplayRange(0, 300);
             imageOffset = imageOffset + img.getDefaultPixels().getSizeY();
 

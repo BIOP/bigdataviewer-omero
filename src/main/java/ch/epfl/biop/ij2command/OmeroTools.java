@@ -27,6 +27,7 @@ import omero.model.enums.UnitsLength;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.concurrent.ExecutionException;
 
 public class OmeroTools {
 
@@ -115,15 +116,30 @@ public class OmeroTools {
     public static Plane2D getRawPlane(Gateway gateway, long imageID, int z, int t, int c) throws Exception{
         try (RawDataFacility rdf = gateway.getFacility(RawDataFacility.class)) {
             SecurityContext ctx = getSecurityContext(gateway);
-            BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
-            ImageData image = browse.getImage(ctx, imageID);
-
-            PixelsData pixels = image.getDefaultPixels();
-
+            PixelsData pixels = getPixelsDataFromOmeroID(imageID, gateway);
             Plane2D p = rdf.getPlane(ctx, pixels, z, t, c);
 
             return p;
         }
+
+    }
+
+    public static Plane2D getRawPlanefromPixelsData(Gateway gateway, PixelsData pixels, int z, int t, int c) throws Exception{
+        try (RawDataFacility rdf = gateway.getFacility(RawDataFacility.class)) {
+            SecurityContext ctx = getSecurityContext(gateway);
+            Plane2D p = rdf.getPlane(ctx, pixels, z, t, c);
+            return p;
+        }
+
+    }
+
+    public static PixelsData getPixelsDataFromOmeroID(long imageID, Gateway gateway) throws Exception{
+
+            SecurityContext ctx = getSecurityContext(gateway);
+            BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
+            ImageData image = browse.getImage(ctx, imageID);
+            PixelsData pixels = image.getDefaultPixels();
+            return pixels;
 
     }
 
@@ -202,7 +218,6 @@ public class OmeroTools {
         UnsignedShortType type = new UnsignedShortType();
 
 
-
         CellLoader<UnsignedShortType> loader = new CellLoader<UnsignedShortType>(){
             @Override
             public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
@@ -247,4 +262,56 @@ public class OmeroTools {
         //ask if pixel has already been loaded or not
         return VolatileViews.wrapAsVolatile(randomAccessible);
     }
+
+
+
+    public static RandomAccessibleInterval openRawRandomAccessibleInterval(Gateway gateway, PixelsData pixels, int t, int c) throws Exception {
+        System.out.println("openRawRandomAccessibleInterval");
+        int sizeX = pixels.getSizeX();
+        int sizeY = pixels.getSizeY();
+        int sizeZ = pixels.getSizeZ();
+
+        long[] total_dim = new long[3];
+        total_dim[0] = sizeX;
+        total_dim[1] = sizeY;
+        total_dim[2] = sizeZ;
+
+        // Create cached image factory of Type Byte
+        ReadOnlyCachedCellImgOptions options = new ReadOnlyCachedCellImgOptions();
+        // Put cell dimensions to image width and height
+        options = options.cellDimensions(sizeX,sizeY, 1);
+        final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory(options);
+
+        UnsignedShortType type = new UnsignedShortType();
+        CellLoader<UnsignedShortType> loader = new CellLoader<UnsignedShortType>(){
+            @Override
+            public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
+                System.out.println("I'm in a cell");
+                long[] positions = new long[2];
+                Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
+                cursor.localize(positions);
+                int z_index = 0;
+                Plane2D plane2D = getRawPlanefromPixelsData(gateway, pixels, z_index, t, c);
+
+                double[][] pixelIntensities = plane2D.getPixelValues();
+
+                while (cursor.hasNext())
+                {
+                    // move the cursor forward by one pixel
+                    cursor.fwd();
+                    //get the current position
+                    cursor.localize(positions);
+                    //get pixel value of the input image (from stack) at pos (px,py) and copy it to the current cell at the same position
+                    cursor.get().set((int) pixelIntensities[(int)positions[0]][(int)positions[1]]);
+                }
+            }
+        };
+
+        RandomAccessibleInterval<UnsignedShortType> randomAccessible = factory.create(total_dim,type,loader);
+        //ask if pixel has already been loaded or not
+        return VolatileViews.wrapAsVolatile(randomAccessible);
+    }
+
+
+
 }
