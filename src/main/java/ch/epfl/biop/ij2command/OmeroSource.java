@@ -15,6 +15,9 @@ import omero.gateway.Gateway;
 import omero.gateway.model.PixelsData;
 import omero.model.enums.UnitsLength;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class OmeroSource implements Source<UnsignedShortType>{
 
     protected final DefaultInterpolators< UnsignedShortType > interpolators = new DefaultInterpolators<>();
@@ -23,35 +26,39 @@ public class OmeroSource implements Source<UnsignedShortType>{
     final int channel_index;
     PixelsData pixels;
     final Gateway gateway;
+    final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new HashMap<>();
+
+    //final public RandomAccessibleInterval rai;
 
 
-    public OmeroSource(int t, int c, PixelsData px, Gateway gt){
-        this.sizeT = t;
+    public OmeroSource(int c, PixelsData px, Gateway gt) throws Exception {
+        this.sizeT = px.getSizeT();
         this.channel_index = c;
         this.pixels = px;
         this.gateway = gt;
+       // this.rai = OmeroTools.openRawRandomAccessibleInterval(gateway,pixels,0,channel_index);
 
     }
 
     @Override
     public boolean isPresent(int t) {
-        return false;
+        return t<sizeT;
     }
 
     @Override
     public RandomAccessibleInterval<UnsignedShortType> getSource(int t, int level) {
-        System.out.println("getSource");
-        try {
-            return OmeroTools.openRawRandomAccessibleInterval(gateway,pixels,t,channel_index);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (!map.containsKey(t)){
+            try {
+                map.put(t,OmeroTools.openRawRandomAccessibleInterval(gateway,pixels,t,channel_index));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
-        return null;
+        return map.get(t);
     }
 
     @Override
     public RealRandomAccessible<UnsignedShortType> getInterpolatedSource(int t, int level, Interpolation method) {
-        System.out.println("getinterpSource");
         final UnsignedShortType zero = getType();
         zero.setZero();
         ExtendedRandomAccessibleInterval<UnsignedShortType, RandomAccessibleInterval< UnsignedShortType >>
@@ -62,7 +69,6 @@ public class OmeroSource implements Source<UnsignedShortType>{
 
     @Override
     public void getSourceTransform(int t, int level, AffineTransform3D transform) {
-        System.out.println("getSourceTransform");
         try {
             double pSizeX = pixels.getPixelSizeX(UnitsLength.MILLIMETER).getValue();
             double pSizeY = pixels.getPixelSizeX(UnitsLength.MILLIMETER).getValue();
@@ -86,7 +92,6 @@ public class OmeroSource implements Source<UnsignedShortType>{
 
     @Override
     public VoxelDimensions getVoxelDimensions() {
-        System.out.println("getVoxDim");
         return null;
     }
 

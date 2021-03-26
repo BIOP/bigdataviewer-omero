@@ -40,16 +40,17 @@ public class RawPixelsfromSource implements Command {
 
             BdvStackSource bss = null;
 
-            for (int c=0; c<pixels.getSizeC(); c++) {
-                OmeroSource source = new OmeroSource(pixels.getSizeT(),c,pixels,gateway);
-                bss = BdvFunctions.show(source);
-                //bss = BdvFunctions.show(source,pixels.getSizeT());
+            //for (int c=0; c<pixels.getSizeC(); c++) {
+            for (int c=0; c<1; c++) {
+            OmeroSource source = new OmeroSource(c,pixels,gateway);
+            bss = BdvFunctions.show(source);
+            //bss = BdvFunctions.show(source,pixels.getSizeT());
 
-                //add a time slider
-                bss.getBdvHandle().getViewerPanel().setNumTimepoints(pixels.getSizeT());
-                bss.setDisplayRange(0, 500);
-                // Color : Random color for each channel
-                bss.setColor(new ARGBType(ARGBType.rgba(255*Math.random(),255*Math.random(),255*Math.random(),1)));
+            //add a time slider
+            bss.getBdvHandle().getViewerPanel().setNumTimepoints(pixels.getSizeT());
+            bss.setDisplayRange(0, 500);
+            // Color : Random color for each channel
+            bss.setColor(new ARGBType(ARGBType.rgba(255*Math.random(),255*Math.random(),255*Math.random(),1)));
             }
 
             gateway.disconnect();
@@ -75,6 +76,8 @@ public class RawPixelsfromSource implements Command {
         ij.ui().showUI();
 
         ij.command().run(RawPixelsfromSource.class, true);
+        //vsi fluo
+        //ij.command().run(RawPixelsfromSource.class, true, "imageID",3713);
     }
 
 }

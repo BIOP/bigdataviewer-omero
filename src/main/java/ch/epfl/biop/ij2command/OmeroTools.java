@@ -266,7 +266,6 @@ public class OmeroTools {
 
 
     public static RandomAccessibleInterval openRawRandomAccessibleInterval(Gateway gateway, PixelsData pixels, int t, int c) throws Exception {
-        System.out.println("openRawRandomAccessibleInterval");
         int sizeX = pixels.getSizeX();
         int sizeY = pixels.getSizeY();
         int sizeZ = pixels.getSizeZ();
@@ -286,12 +285,10 @@ public class OmeroTools {
         CellLoader<UnsignedShortType> loader = new CellLoader<UnsignedShortType>(){
             @Override
             public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
-                System.out.println("I'm in a cell");
-                long[] positions = new long[2];
+                long[] positions = new long[3];
                 Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
                 cursor.localize(positions);
-                int z_index = 0;
-                Plane2D plane2D = getRawPlanefromPixelsData(gateway, pixels, z_index, t, c);
+                Plane2D plane2D = getRawPlanefromPixelsData(gateway, pixels, (int) positions[2], t, c);
 
                 double[][] pixelIntensities = plane2D.getPixelValues();
 
