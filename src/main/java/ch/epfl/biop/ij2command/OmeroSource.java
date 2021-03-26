@@ -49,7 +49,8 @@ public class OmeroSource implements Source<UnsignedShortType>{
     public RandomAccessibleInterval<UnsignedShortType> getSource(int t, int level) {
         if (!map.containsKey(t)){
             try {
-                map.put(t,OmeroTools.openRawRandomAccessibleInterval(gateway,pixels,t,channel_index));
+                //map.put(t,OmeroTools.openRawRandomAccessibleInterval(gateway,pixels,t,channel_index));
+                map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(gateway,pixels,t,channel_index));
             } catch (Exception e) {
                 e.printStackTrace();
             }
