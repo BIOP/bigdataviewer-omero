@@ -43,7 +43,7 @@ import loci.formats.in.MetadataLevel;
  * </p>
  */
 
-@Plugin(type = Command.class, menuPath = "Plugins>BIOP>Dummy Command")
+@Plugin(type = Command.class, menuPath = "Plugins>BIOP>OpenOmeroImage")
 public class OmeroOpenImageCommand implements Command {
 
     @Parameter
@@ -64,11 +64,11 @@ public class OmeroOpenImageCommand implements Command {
     @Parameter(label = "Enter the ID of your OMERO image")
     long imageID;
 
-    @Parameter(label = "Enter the ID of your OMERO dataset")
-    long datasetID;
+    //@Parameter(label = "Enter the ID of your OMERO dataset")
+    //long datasetID;
 
-    @Parameter(label = "Enter the ID of your OMERO group")
-    long groupID;
+    //@Parameter(label = "Enter the ID of your OMERO group")
+    //long groupID;
 
     static int port = 4064;
 
@@ -79,22 +79,18 @@ public class OmeroOpenImageCommand implements Command {
         // Connect to Omero
         // https://downloads.openmicroscopy.org/omero/5.4.10/api/omero/gateway/Gateway.html
         try {
-            Gateway gateway = omeroConnect(host, port, username, password);
+            Gateway gateway = OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
-            openImagePlus(host,username,password,groupID,imageID);
+            openImagePlus(host,username,password,imageID);
             System.out.println( "Disconnecting...");
-           // gateway.disconnect();
+            gateway.disconnect();
             System.out.println( "Session active : "+gateway.isConnected() );
         }
         catch(Exception e) { e.printStackTrace();
         }
-
     }
 
-
-
     Gateway omeroConnect(String hostname, int port, String userName, String password)throws Exception{
-
         //Omero Connect with credentials and simpleLogger
         LoginCredentials cred = new LoginCredentials();
         cred.getServer().setHost(hostname);
@@ -107,7 +103,6 @@ public class OmeroOpenImageCommand implements Command {
         return gateway;
     }
 
-
     IObject find_dataset(Gateway gateway, long datasetID) throws Exception{
         //"Load the Dataset"
         BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
@@ -116,8 +111,7 @@ public class OmeroOpenImageCommand implements Command {
         return browse.findIObject( ctx, "omero.model.Dataset", datasetID);
     }
 
-    void openImagePlus(String host,String username,String password,long groupID,long imageID){
-
+    void openImagePlus(String host,String username,String password,long imageID){
         String options = "";
         options += "location=[OMERO] open=[omero:server=";
         options += host;
@@ -125,19 +119,15 @@ public class OmeroOpenImageCommand implements Command {
         options += username;
         options += "\npass=";
         options += password;
-        options += "\ngroupID=";
-        options += groupID;
+        //options += "\ngroupID=";
+        //options += groupID;
         options += "\niid=";
         options += imageID;
         options += "]";
         //options += " use_virtual_stack";
-        options += " windowless=true ";
-
+        //options += " windowless=true ";
         IJ.runPlugIn("loci.plugins.LociImporter",  options);
-
         // LociImporter li = new LociImporter();
-
-
     }
 
 
