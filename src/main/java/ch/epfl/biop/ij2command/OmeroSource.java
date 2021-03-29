@@ -11,10 +11,10 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.ExtendedRandomAccessibleInterval;
 import net.imglib2.view.Views;
 import ome.model.units.BigResult;
-import omero.gateway.Gateway;
+import omero.gateway.SecurityContext;
+import omero.gateway.facility.RawDataFacility;
 import omero.gateway.model.PixelsData;
 import omero.model.enums.UnitsLength;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,19 +25,17 @@ public class OmeroSource implements Source<UnsignedShortType>{
     int sizeT;
     final int channel_index;
     PixelsData pixels;
-    final Gateway gateway;
     final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new HashMap<>();
+    final SecurityContext ctx;
+    final RawDataFacility rdf;
 
-    //final public RandomAccessibleInterval rai;
 
-
-    public OmeroSource(int c, PixelsData px, Gateway gt) throws Exception {
+    public OmeroSource(int c, PixelsData px, SecurityContext ctx, RawDataFacility rdf) throws Exception {
         this.sizeT = px.getSizeT();
         this.channel_index = c;
         this.pixels = px;
-        this.gateway = gt;
-       // this.rai = OmeroTools.openRawRandomAccessibleInterval(gateway,pixels,0,channel_index);
-
+        this.rdf = rdf;
+        this.ctx = ctx;
     }
 
     @Override
@@ -49,8 +47,8 @@ public class OmeroSource implements Source<UnsignedShortType>{
     public RandomAccessibleInterval<UnsignedShortType> getSource(int t, int level) {
         if (!map.containsKey(t)){
             try {
-                //map.put(t,OmeroTools.openRawRandomAccessibleInterval(gateway,pixels,t,channel_index));
-                map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(gateway,pixels,t,channel_index));
+                //map.put(t,OmeroTools.openRawRandomAccessibleInterval(ctx,rdf,pixels,t,channel_index));
+                map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(ctx, rdf, pixels,t,channel_index));
             } catch (Exception e) {
                 e.printStackTrace();
             }
