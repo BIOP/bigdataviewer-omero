@@ -82,9 +82,9 @@ public class RawPixelsfromSource implements Command {
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        ij.command().run(RawPixelsfromSource.class, true);
+        //ij.command().run(RawPixelsfromSource.class, true);
         //vsi fluo
-        //ij.command().run(RawPixelsfromSource.class, true, "imageID",3713);
+        ij.command().run(RawPixelsfromSource.class, true, "imageID",3713);
     }
 
 }

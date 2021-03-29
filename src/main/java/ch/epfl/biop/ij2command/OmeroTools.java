@@ -305,34 +305,46 @@ public class OmeroTools {
         int sizeZ = pixels.getSizeZ();
 
         long[] total_dim = new long[3];
-        total_dim[0] = sizeX-1000;
-        total_dim[1] = sizeY-1000;
+
+        System.out.println("X " + sizeX);
+        System.out.println("Y " + sizeY);
+        total_dim[0] = sizeX;
+        total_dim[1] = sizeY;
+        //total_dim[0] = sizeX-1000;
+        //total_dim[1] = sizeY-1000;
         total_dim[2] = sizeZ;
 
         // Create cached image factory of Type Byte
         ReadOnlyCachedCellImgOptions options = new ReadOnlyCachedCellImgOptions();
-        // Put cell dimensions to arbitrary values (512,512)
-        options = options.cellDimensions(512,512, 1);
+        // Put cell dimensions to arbitrary values
+        int Xcellsize = 512;
+        int Ycellsize = 512;
+        options = options.cellDimensions(Xcellsize,Ycellsize, 1);
         final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory(options);
 
         UnsignedShortType type = new UnsignedShortType();
         CellLoader<UnsignedShortType> loader = new CellLoader<UnsignedShortType>(){
             @Override
             public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
-                synchronized (OmeroTools.class){
+
                     long[] positions = new long[3];
                     Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
                     cursor.localize(positions);
                     //Plane2D plane2D = getRawPlanefromPixelsData(gateway, pixels, (int) positions[2], t, c);
 
                     // +1 since cursor starts just before the block
+                    //int xOffset = 0;
+
                     int xOffset = (int) positions[0] + 1;
                     int yOffset = (int) positions[1];
+                    System.out.println("Xoffset : " + xOffset);
+                    System.out.println("Yoffset : " + yOffset);
                     double[][] pixelIntensities;
 
-                    Plane2D plane2D = getRawTilefromPixelsData(ctx, rdf, pixels, (int) positions[2], t, c, xOffset, yOffset, 512, 512);
+                synchronized (OmeroTools.class){
+                    Plane2D plane2D = getRawTilefromPixelsData(ctx, rdf, pixels, (int) positions[2], t, c, xOffset, yOffset, Xcellsize, Ycellsize);
                     pixelIntensities = plane2D.getPixelValues();
-
+                }
                     while (cursor.hasNext()) {
                         // move the cursor forward by one pixel
                         cursor.fwd();
@@ -341,7 +353,6 @@ public class OmeroTools {
                         //get pixel value of the input image (from stack) at pos (px,py) and copy it to the current cell at the same position
                         cursor.get().set((int) pixelIntensities[(int) positions[0] - xOffset][(int) positions[1] - yOffset]);
                     }
-                }
             }
         };
 
