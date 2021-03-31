@@ -3,12 +3,17 @@ package ch.epfl.biop.ij2command;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvStackSource;
 import net.imagej.ImageJ;
+import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.ARGBType;
 import omero.gateway.Gateway;
+import omero.gateway.SecurityContext;
+import omero.gateway.facility.RawDataFacility;
 import omero.gateway.model.PixelsData;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+
+import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
 
 
 //New class for displaying an OMERO image (raw pixels) in 3D in BDV
@@ -37,12 +42,14 @@ public class RawPixelsfromSource implements Command {
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
             PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway);
+            RawDataFacility rdf = gateway.getFacility(RawDataFacility.class);
+            SecurityContext ctx = getSecurityContext(gateway);
 
             BdvStackSource bss = null;
 
             //for (int c=0; c<pixels.getSizeC(); c++) {
             for (int c=0; c<1; c++) {
-            OmeroSource source = new OmeroSource(c,pixels,gateway);
+            OmeroSource source = new OmeroSource(c,pixels,ctx,rdf);
             bss = BdvFunctions.show(source);
             //bss = BdvFunctions.show(source,pixels.getSizeT());
 
@@ -75,9 +82,9 @@ public class RawPixelsfromSource implements Command {
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        ij.command().run(RawPixelsfromSource.class, true);
+        //ij.command().run(RawPixelsfromSource.class, true);
         //vsi fluo
-        //ij.command().run(RawPixelsfromSource.class, true, "imageID",3713);
+        ij.command().run(RawPixelsfromSource.class, true, "imageID",3713);
     }
 
 }

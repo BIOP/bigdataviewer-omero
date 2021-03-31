@@ -5,11 +5,16 @@ import bdv.util.BdvStackSource;
 import net.imagej.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
 import omero.gateway.Gateway;
+import omero.gateway.SecurityContext;
+import omero.gateway.facility.BrowseFacility;
+import omero.gateway.facility.RawDataFacility;
+import omero.gateway.model.ImageData;
+import omero.gateway.model.PixelsData;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 
-
+import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
 
 
 //New class for displaying all images from an OMERO Dataset in a tiled manner in BDV
@@ -37,7 +42,12 @@ public class RawPixels implements Command {
         try {
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
-            RandomAccessibleInterval volatilerandomAccessible = OmeroTools.openRawPlaneRandomAccessibleInterval(gateway,imageID,true);
+            BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
+            SecurityContext ctx = getSecurityContext(gateway);
+            RawDataFacility rdf = gateway.getFacility(RawDataFacility.class);
+            ImageData image = browse.getImage(ctx, imageID);
+            PixelsData pixels = image.getDefaultPixels();
+            RandomAccessibleInterval volatilerandomAccessible = OmeroTools.openRawPlaneRandomAccessibleInterval(ctx, rdf,pixels,true);
             gateway.disconnect();
 
             BdvStackSource bss = BdvFunctions.show(volatilerandomAccessible,"OMERO raw plane");
@@ -47,7 +57,6 @@ public class RawPixels implements Command {
             e.printStackTrace();
         }
     }
-
 
 
     /**
