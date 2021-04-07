@@ -27,7 +27,8 @@ public class RawPixelsfromSource implements Command {
     @Parameter(label = "Enter your gaspar username")
     String username;
 
-    @Parameter(label = "Enter your gaspar password", style = "password", persist = false)
+    //@Parameter(label = "Enter your gaspar password", style = "password", persist = false)
+    @Parameter(label = "Enter your gaspar password", style = "password")
     String password;
 
     @Parameter(label = "Enter the ID of your OMERO image")
@@ -49,15 +50,15 @@ public class RawPixelsfromSource implements Command {
 
             //for (int c=0; c<pixels.getSizeC(); c++) {
             for (int c=0; c<1; c++) {
-            OmeroSource source = new OmeroSource(c,pixels,ctx,rdf);
-            bss = BdvFunctions.show(source);
-            //bss = BdvFunctions.show(source,pixels.getSizeT());
+                OmeroSource source = new OmeroSource(c,pixels,ctx,rdf);
+                bss = BdvFunctions.show(source);
+                //bss = BdvFunctions.show(source,pixels.getSizeT());
 
-            //add a time slider
-            bss.getBdvHandle().getViewerPanel().setNumTimepoints(pixels.getSizeT());
-            bss.setDisplayRange(0, 500);
-            // Color : Random color for each channel
-            bss.setColor(new ARGBType(ARGBType.rgba(255*Math.random(),255*Math.random(),255*Math.random(),1)));
+                //add a time slider
+                bss.getBdvHandle().getViewerPanel().setNumTimepoints(pixels.getSizeT());
+                bss.setDisplayRange(0, 255);
+                // Color : Random color for each channel
+                bss.setColor(new ARGBType(ARGBType.rgba(255*Math.random(),255*Math.random(),255*Math.random(),1)));
             }
 
             gateway.disconnect();
@@ -80,11 +81,20 @@ public class RawPixelsfromSource implements Command {
     public static void main(final String... args) throws Exception {
         // create the ImageJ application context with all available services
         final ImageJ ij = new ImageJ();
-        ij.ui().showUI();
+        //ij.ui().showUI();
 
         //ij.command().run(RawPixelsfromSource.class, true);
+
         //vsi fluo
         ij.command().run(RawPixelsfromSource.class, true, "imageID",3713);
+
+        //lif 4 channels, (1024 1024)
+        //ij.command().run(RawPixelsfromSource.class, true, "imageID",24601);
+
+        //small vsi fluo
+        //ij.command().run(RawPixelsfromSource.class, true, "imageID",14746);
+
+
     }
 
 }

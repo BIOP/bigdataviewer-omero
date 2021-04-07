@@ -15,8 +15,16 @@ import omero.gateway.SecurityContext;
 import omero.gateway.facility.RawDataFacility;
 import omero.gateway.model.PixelsData;
 import omero.model.enums.UnitsLength;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
+
+import static ch.epfl.biop.ij2command.ConcurrentUtils.stop;
 
 public class OmeroSource implements Source<UnsignedShortType>{
 
@@ -25,10 +33,10 @@ public class OmeroSource implements Source<UnsignedShortType>{
     int sizeT;
     final int channel_index;
     PixelsData pixels;
-    final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new HashMap<>();
-    final SecurityContext ctx;
+    //final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new HashMap<>();
+    final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new ConcurrentHashMap<>();
+    SecurityContext ctx;
     final RawDataFacility rdf;
-
 
     public OmeroSource(int c, PixelsData px, SecurityContext ctx, RawDataFacility rdf) throws Exception {
         this.sizeT = px.getSizeT();
@@ -44,11 +52,11 @@ public class OmeroSource implements Source<UnsignedShortType>{
     }
 
     @Override
-    public RandomAccessibleInterval<UnsignedShortType> getSource(int t, int level) {
+    synchronized public RandomAccessibleInterval<UnsignedShortType> getSource(int t, int level) {
         if (!map.containsKey(t)){
+            //map.put(t,OmeroTools.openRawRandomAccessibleInterval(ctx,rdf,pixels,t,channel_index));
             try {
-                //map.put(t,OmeroTools.openRawRandomAccessibleInterval(ctx,rdf,pixels,t,channel_index));
-                map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(ctx, rdf, pixels,t,channel_index));
+            map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(ctx, rdf, pixels,t,channel_index));
             } catch (Exception e) {
                 e.printStackTrace();
             }
