@@ -305,7 +305,7 @@ public class OmeroTools {
     }
 
 
-    public synchronized static RandomAccessibleInterval openTiledRawRandomAccessibleInterval(SecurityContext ctx, RawDataFacility rdf, PixelsData pixels, int t, int c) throws Exception {
+    public synchronized static RandomAccessibleInterval openTiledRawRandomAccessibleInterval(SecurityContext ctx, Gateway gateway, PixelsData pixels, int t, int c) throws Exception {
         int sizeX = pixels.getSizeX();
         int sizeY = pixels.getSizeY();
         int sizeZ = pixels.getSizeZ();
@@ -314,10 +314,10 @@ public class OmeroTools {
 
         System.out.println("X " + sizeX);
         System.out.println("Y " + sizeY);
-        total_dim[0] = sizeX;
-        total_dim[1] = sizeY;
-        //total_dim[0] = sizeX-1000;
-        //total_dim[1] = sizeY-1000;
+        //total_dim[0] = sizeX;
+        //total_dim[1] = sizeY;
+        total_dim[0] = sizeX-1000;
+        total_dim[1] = sizeY-1000;
         total_dim[2] = sizeZ;
 
         // Create cached image factory of Type Byte
@@ -328,35 +328,22 @@ public class OmeroTools {
         options = options.cellDimensions(Xcellsize,Ycellsize, 1);
         final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory(options);
 
-        //ReentrantLock lock = new ReentrantLock();
-
         UnsignedShortType type = new UnsignedShortType();
         CellLoader<UnsignedShortType> loader = new CellLoader<UnsignedShortType>(){
             @Override
             public synchronized void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
-                //synchronized (this) {
                 synchronized (OmeroTools.class) {
-                    /*try {
-                        System.out.println("Locked: " + lock.isLocked());
-                        System.out.println("Held by me: " + lock.isHeldByCurrentThread());
-                        boolean locked = lock.tryLock();
-                        System.out.println("Lock acquired: " + locked);
-
-
-                        if (lock.isHeldByCurrentThread()) {*/
-
                         long[] positions = new long[3];
                         Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
                         cursor.localize(positions);
-                        //Plane2D plane2D = getRawPlanefromPixelsData(gateway, pixels, (int) positions[2], t, c);
 
                         // +1 since cursor starts just before the block
-                        //int xOffset = 0;
-
                         int xOffset = (int) positions[0] + 1;
                         int yOffset = (int) positions[1];
                         System.out.println("Offset : (" + xOffset + "," + yOffset + ")");
                         double[][] pixelIntensities;
+
+                        RawDataFacility rdf = gateway.getFacility(RawDataFacility.class);
 
                         //synchronized (OmeroTools.class){
                         try {
@@ -375,10 +362,6 @@ public class OmeroTools {
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
-                    /*    }
-                    } finally {
-                        lock.unlock();
-                    }*/
                 }
             }
         };
@@ -386,8 +369,6 @@ public class OmeroTools {
         RandomAccessibleInterval<UnsignedShortType> randomAccessible = factory.create(total_dim,type,loader);
         //ask if pixel has already been loaded or not
         return VolatileViews.wrapAsVolatile(randomAccessible);
-
-
     }
 
 }

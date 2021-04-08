@@ -27,8 +27,7 @@ public class RawPixelsfromSource implements Command {
     @Parameter(label = "Enter your gaspar username")
     String username;
 
-    //@Parameter(label = "Enter your gaspar password", style = "password", persist = false)
-    @Parameter(label = "Enter your gaspar password", style = "password")
+    @Parameter(label = "Enter your gaspar password", style = "password", persist = false)
     String password;
 
     @Parameter(label = "Enter the ID of your OMERO image")
@@ -43,14 +42,14 @@ public class RawPixelsfromSource implements Command {
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
             PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway);
-            RawDataFacility rdf = gateway.getFacility(RawDataFacility.class);
+            //RawDataFacility rdf = gateway.getFacility(RawDataFacility.class);
             SecurityContext ctx = getSecurityContext(gateway);
 
             BdvStackSource bss = null;
 
             //for (int c=0; c<pixels.getSizeC(); c++) {
             for (int c=0; c<1; c++) {
-                OmeroSource source = new OmeroSource(c,pixels,ctx,rdf);
+                OmeroSource source = new OmeroSource(c,pixels,ctx,gateway);
                 bss = BdvFunctions.show(source);
                 //bss = BdvFunctions.show(source,pixels.getSizeT());
 
@@ -81,7 +80,7 @@ public class RawPixelsfromSource implements Command {
     public static void main(final String... args) throws Exception {
         // create the ImageJ application context with all available services
         final ImageJ ij = new ImageJ();
-        //ij.ui().showUI();
+        ij.ui().showUI();
 
         //ij.command().run(RawPixelsfromSource.class, true);
 

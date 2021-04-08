@@ -11,6 +11,7 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.ExtendedRandomAccessibleInterval;
 import net.imglib2.view.Views;
 import ome.model.units.BigResult;
+import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.facility.RawDataFacility;
 import omero.gateway.model.PixelsData;
@@ -36,13 +37,13 @@ public class OmeroSource implements Source<UnsignedShortType>{
     //final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new HashMap<>();
     final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new ConcurrentHashMap<>();
     SecurityContext ctx;
-    final RawDataFacility rdf;
+    final Gateway gt;
 
-    public OmeroSource(int c, PixelsData px, SecurityContext ctx, RawDataFacility rdf) throws Exception {
+    public OmeroSource(int c, PixelsData px, SecurityContext ctx, Gateway gateway) throws Exception {
         this.sizeT = px.getSizeT();
         this.channel_index = c;
         this.pixels = px;
-        this.rdf = rdf;
+        this.gt = gateway;
         this.ctx = ctx;
     }
 
@@ -56,7 +57,7 @@ public class OmeroSource implements Source<UnsignedShortType>{
         if (!map.containsKey(t)){
             //map.put(t,OmeroTools.openRawRandomAccessibleInterval(ctx,rdf,pixels,t,channel_index));
             try {
-            map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(ctx, rdf, pixels,t,channel_index));
+            map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(ctx, gt, pixels,t,channel_index));
             } catch (Exception e) {
                 e.printStackTrace();
             }

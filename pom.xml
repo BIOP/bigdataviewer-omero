@@ -136,11 +136,6 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.openmicroscopy</groupId>
-			<artifactId>omero-gateway</artifactId>
-			<version>5.6.5</version>
-		</dependency>
 
 		<!-- OME dependencies -->
 		<dependency>
@@ -160,6 +155,12 @@
 		<dependency>
 			<groupId>org.openmicroscopy</groupId>
 			<artifactId>omero-blitz</artifactId>
+			<version>5.5.8</version>
+		</dependency>
+		<dependency>
+			<groupId>org.openmicroscopy</groupId>
+			<artifactId>omero-gateway</artifactId>
+			<version>5.6.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.openmicroscopy</groupId>
