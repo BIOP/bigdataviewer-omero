@@ -40,18 +40,18 @@ public class RawPixelsfromSource implements Command {
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
             SecurityContext ctx = getSecurityContext(gateway);
-            PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
+            //PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
 
             BdvStackSource bss = null;
 
             //for (int c=0; c<pixels.getSizeC(); c++) {
             for (int c=0; c<1; c++) {
-                OmeroSource source = new OmeroSource(c,pixels,ctx,gateway);
+                OmeroSource source = new OmeroSource(imageID,c,ctx,gateway);
                 bss = BdvFunctions.show(source);
                 //bss = BdvFunctions.show(source,pixels.getSizeT());
 
                 //add a time slider
-                bss.getBdvHandle().getViewerPanel().setNumTimepoints(pixels.getSizeT());
+                bss.getBdvHandle().getViewerPanel().setNumTimepoints(source.getSizeT());
                 bss.setDisplayRange(0, 255);
                 // Color : Random color for each channel
                 bss.setColor(new ARGBType(ARGBType.rgba(255*Math.random(),255*Math.random(),255*Math.random(),1)));

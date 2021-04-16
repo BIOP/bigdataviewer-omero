@@ -33,7 +33,7 @@ public class OmeroSource implements Source<UnsignedShortType>{
 
     int sizeT;
     final int channel_index;
-    PixelsData pixels;
+    final long imageID;
     //final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new HashMap<>();
     final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new ConcurrentHashMap<>();
     SecurityContext ctx;
@@ -42,10 +42,12 @@ public class OmeroSource implements Source<UnsignedShortType>{
     double pSizeY;
     double pSizeZ;
 
-    public OmeroSource(int c, PixelsData px, SecurityContext ctx, Gateway gateway) throws Exception {
-        this.sizeT = px.getSizeT();
+    public OmeroSource(long imageID, int c, SecurityContext ctx, Gateway gateway) throws Exception {
+        PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
+        System.out.println("pixel type " + pixels.getPixelType());
+        this.imageID = imageID;
+        this.sizeT = pixels.getSizeT();
         this.channel_index = c;
-        this.pixels = px;
         this.gt = gateway;
         this.ctx = ctx;
         this.pSizeX = pixels.getPixelSizeX(UnitsLength.MILLIMETER).getValue();
@@ -55,6 +57,7 @@ public class OmeroSource implements Source<UnsignedShortType>{
         this.pSizeZ = 1;
         System.out.println(this.pSizeY);
         System.out.println(this.pSizeZ);
+
     }
 
     @Override
@@ -66,7 +69,7 @@ public class OmeroSource implements Source<UnsignedShortType>{
     synchronized public RandomAccessibleInterval<UnsignedShortType> getSource(int t, int level) {
         if (!map.containsKey(t)){
             try {
-            map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(ctx,gt,pixels,t,channel_index));
+            map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(imageID,channel_index,t,ctx,gt));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -112,5 +115,9 @@ public class OmeroSource implements Source<UnsignedShortType>{
     @Override
     public int getNumMipmapLevels() {
         return 1;
+    }
+
+    public int getSizeT(){
+        return sizeT;
     }
 }

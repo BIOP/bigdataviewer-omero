@@ -303,7 +303,8 @@ public class OmeroTools {
     }
 
 
-    public static RandomAccessibleInterval openTiledRawRandomAccessibleInterval(SecurityContext ctx, Gateway gateway, PixelsData pixels, int t, int c) throws Exception {
+    public static RandomAccessibleInterval openTiledRawRandomAccessibleInterval(long imageID, int c, int t,SecurityContext ctx, Gateway gateway) throws Exception {
+        final PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
         int sizeX = pixels.getSizeX();
         int sizeY = pixels.getSizeY();
         int sizeZ = pixels.getSizeZ();
@@ -329,35 +330,36 @@ public class OmeroTools {
         UnsignedShortType type = new UnsignedShortType();
         CellLoader<UnsignedShortType> loader = new CellLoader<UnsignedShortType>(){
             @Override
-            synchronized public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
-                synchronized (OmeroTools.class) {
-                        long[] positions = new long[3];
-                        Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
+            public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) {
+
+                long[] positions = new long[3];
+                Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
+                cursor.localize(positions);
+
+                // +1 since cursor starts just before the block
+                int xOffset = (int) positions[0] + 1;
+                int yOffset = (int) positions[1];
+                //System.out.println("Offset : (" + xOffset + "," + yOffset + ")");
+                double[][] pixelIntensities;
+
+
+                try(RawDataFacility rdf = gateway.getFacility(RawDataFacility.class)) {
+                    synchronized (OmeroTools.class) {
+                        Plane2D plane2D = getRawTilefromPixelsData(ctx, rdf, pixels, (int) positions[2], t, c, xOffset, yOffset, Xcellsize, Ycellsize);
+                        pixelIntensities = plane2D.getPixelValues();
+                    }
+                    while (cursor.hasNext()) {
+                        // move the cursor forward by one pixel
+                        cursor.fwd();
+                        //get the current position
                         cursor.localize(positions);
-
-                        // +1 since cursor starts just before the block
-                        int xOffset = (int) positions[0] + 1;
-                        int yOffset = (int) positions[1];
-                        //System.out.println("Offset : (" + xOffset + "," + yOffset + ")");
-                        double[][] pixelIntensities;
-
-
-                        try(RawDataFacility rdf = gateway.getFacility(RawDataFacility.class)) {
-                            Plane2D plane2D = getRawTilefromPixelsData(ctx, rdf, pixels, (int) positions[2], t, c, xOffset, yOffset, Xcellsize, Ycellsize);
-                            pixelIntensities = plane2D.getPixelValues();
-
-                            while (cursor.hasNext()) {
-                                // move the cursor forward by one pixel
-                                cursor.fwd();
-                                //get the current position
-                                cursor.localize(positions);
-                                //get pixel value of the input image (from stack) at pos (px,py) and copy it to the current cell at the same position
-                                cursor.get().set((int) pixelIntensities[(int) positions[0] - xOffset][(int) positions[1] - yOffset]);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
+                        //get pixel value of the input image (from stack) at pos (px,py) and copy it to the current cell at the same position
+                        cursor.get().set((int) pixelIntensities[(int) positions[0] - xOffset][(int) positions[1] - yOffset]);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
+
             }
         };
 
