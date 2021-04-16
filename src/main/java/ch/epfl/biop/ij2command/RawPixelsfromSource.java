@@ -3,11 +3,9 @@ package ch.epfl.biop.ij2command;
 import bdv.util.BdvFunctions;
 import bdv.util.BdvStackSource;
 import net.imagej.ImageJ;
-import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.type.numeric.ARGBType;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
-import omero.gateway.facility.RawDataFacility;
 import omero.gateway.model.PixelsData;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
@@ -41,9 +39,8 @@ public class RawPixelsfromSource implements Command {
         try {
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
-            PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway);
-            //RawDataFacility rdf = gateway.getFacility(RawDataFacility.class);
             SecurityContext ctx = getSecurityContext(gateway);
+            PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
 
             BdvStackSource bss = null;
 

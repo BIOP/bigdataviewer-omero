@@ -127,15 +127,13 @@ public class OmeroTools {
             return p;
     }
 
-    synchronized public static Plane2D getRawTilefromPixelsData(SecurityContext ctx, RawDataFacility rdf, PixelsData pixels, int z, int t, int c, int x, int y, int w, int h) throws Exception{
-    //public static Plane2D getRawTilefromPixelsData(SecurityContext ctx, RawDataFacility rdf, PixelsData pixels, int z, int t, int c, int x, int y, int w, int h) throws Exception{
+   public static Plane2D getRawTilefromPixelsData(SecurityContext ctx, RawDataFacility rdf, PixelsData pixels, int z, int t, int c, int x, int y, int w, int h) throws Exception{
             Plane2D p = rdf.getTile(ctx, pixels, z, t, c, x, y, w, h);
             return p;
     }
 
-    public static PixelsData getPixelsDataFromOmeroID(long imageID, Gateway gateway) throws Exception{
+    public static PixelsData getPixelsDataFromOmeroID(long imageID, Gateway gateway, SecurityContext ctx) throws Exception{
 
-            SecurityContext ctx = getSecurityContext(gateway);
             BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
             ImageData image = browse.getImage(ctx, imageID);
             PixelsData pixels = image.getDefaultPixels();
@@ -305,7 +303,7 @@ public class OmeroTools {
     }
 
 
-    public synchronized static RandomAccessibleInterval openTiledRawRandomAccessibleInterval(SecurityContext ctx, Gateway gateway, PixelsData pixels, int t, int c) throws Exception {
+    public static RandomAccessibleInterval openTiledRawRandomAccessibleInterval(SecurityContext ctx, Gateway gateway, PixelsData pixels, int t, int c) throws Exception {
         int sizeX = pixels.getSizeX();
         int sizeY = pixels.getSizeY();
         int sizeZ = pixels.getSizeZ();
@@ -331,7 +329,7 @@ public class OmeroTools {
         UnsignedShortType type = new UnsignedShortType();
         CellLoader<UnsignedShortType> loader = new CellLoader<UnsignedShortType>(){
             @Override
-            public synchronized void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
+            synchronized public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
                 synchronized (OmeroTools.class) {
                         long[] positions = new long[3];
                         Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
@@ -340,17 +338,14 @@ public class OmeroTools {
                         // +1 since cursor starts just before the block
                         int xOffset = (int) positions[0] + 1;
                         int yOffset = (int) positions[1];
-                        System.out.println("Offset : (" + xOffset + "," + yOffset + ")");
+                        //System.out.println("Offset : (" + xOffset + "," + yOffset + ")");
                         double[][] pixelIntensities;
 
-                        RawDataFacility rdf = gateway.getFacility(RawDataFacility.class);
 
-                        //synchronized (OmeroTools.class){
-                        try {
+                        try(RawDataFacility rdf = gateway.getFacility(RawDataFacility.class)) {
                             Plane2D plane2D = getRawTilefromPixelsData(ctx, rdf, pixels, (int) positions[2], t, c, xOffset, yOffset, Xcellsize, Ycellsize);
                             pixelIntensities = plane2D.getPixelValues();
 
-                            //}
                             while (cursor.hasNext()) {
                                 // move the cursor forward by one pixel
                                 cursor.fwd();

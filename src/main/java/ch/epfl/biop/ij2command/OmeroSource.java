@@ -38,6 +38,9 @@ public class OmeroSource implements Source<UnsignedShortType>{
     final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new ConcurrentHashMap<>();
     SecurityContext ctx;
     final Gateway gt;
+    double pSizeX;
+    double pSizeY;
+    double pSizeZ;
 
     public OmeroSource(int c, PixelsData px, SecurityContext ctx, Gateway gateway) throws Exception {
         this.sizeT = px.getSizeT();
@@ -45,6 +48,13 @@ public class OmeroSource implements Source<UnsignedShortType>{
         this.pixels = px;
         this.gt = gateway;
         this.ctx = ctx;
+        this.pSizeX = pixels.getPixelSizeX(UnitsLength.MILLIMETER).getValue();
+        System.out.println(this.pSizeX);
+        this.pSizeY = pixels.getPixelSizeY(UnitsLength.MILLIMETER).getValue();
+        //this.pSizeZ = pixels.getPixelSizeZ(UnitsLength.MILLIMETER).getValue();
+        this.pSizeZ = 1;
+        System.out.println(this.pSizeY);
+        System.out.println(this.pSizeZ);
     }
 
     @Override
@@ -55,9 +65,8 @@ public class OmeroSource implements Source<UnsignedShortType>{
     @Override
     synchronized public RandomAccessibleInterval<UnsignedShortType> getSource(int t, int level) {
         if (!map.containsKey(t)){
-            //map.put(t,OmeroTools.openRawRandomAccessibleInterval(ctx,rdf,pixels,t,channel_index));
             try {
-            map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(ctx, gt, pixels,t,channel_index));
+            map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(ctx,gt,pixels,t,channel_index));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -77,14 +86,11 @@ public class OmeroSource implements Source<UnsignedShortType>{
 
     @Override
     public void getSourceTransform(int t, int level, AffineTransform3D transform) {
-        try {
-            double pSizeX = pixels.getPixelSizeX(UnitsLength.MILLIMETER).getValue();
-            double pSizeY = pixels.getPixelSizeX(UnitsLength.MILLIMETER).getValue();
-            double pSizeZ = pixels.getPixelSizeX(UnitsLength.MILLIMETER).getValue();
-            transform.scale(pSizeX, pSizeY,pSizeZ);
-        } catch (BigResult bigResult) {
-            bigResult.printStackTrace();
-        }
+        //try {
+        transform.scale(pSizeX, pSizeY,pSizeZ);
+        //} catch (BigResult bigResult) {
+       //     bigResult.printStackTrace();
+        //}
     }
 
     @Override
