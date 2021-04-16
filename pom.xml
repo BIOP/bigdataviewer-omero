@@ -172,6 +172,11 @@
 			<artifactId>bigdataviewer_fiji</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>ch.epfl.biop</groupId>
+			<artifactId>bigdataviewer-bioformats</artifactId>
+			<version>0.2.15</version>
+		</dependency>
 
 		<!-- dependencies added by nico - test -->
 		<dependency>

@@ -365,7 +365,7 @@ public class OmeroTools {
 
         RandomAccessibleInterval<UnsignedShortType> randomAccessible = factory.create(total_dim,type,loader);
         //ask if pixel has already been loaded or not
-        return VolatileViews.wrapAsVolatile(randomAccessible);
+        return randomAccessible;
     }
 
 }
