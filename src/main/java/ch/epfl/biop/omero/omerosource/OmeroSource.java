@@ -1,8 +1,9 @@
-package ch.epfl.biop.ij2command;
+package ch.epfl.biop.omero.omerosource;
 
 import bdv.util.DefaultInterpolators;
 import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
+import ch.epfl.biop.ij2command.OmeroTools;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
@@ -25,7 +26,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static ch.epfl.biop.ij2command.ConcurrentUtils.stop;
 
 public class OmeroSource implements Source<UnsignedShortType>{
 
@@ -42,22 +42,17 @@ public class OmeroSource implements Source<UnsignedShortType>{
     double pSizeY;
     double pSizeZ;
 
-    public OmeroSource(long imageID, int c, SecurityContext ctx, Gateway gateway) throws Exception {
-        PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
-
-        System.out.println("pixel type " + pixels.getPixelType());
-        this.imageID = imageID;
-        this.sizeT = pixels.getSizeT();
+    public OmeroSource(OmeroSourceOpener opener, int c) throws Exception {
+        //PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
+        //System.out.println("pixel type " + pixels.getPixelType());
+        this.imageID = opener.omeroImageID;
+        this.gt = opener.gateway;
+        this.ctx = opener.securityContext;
+        this.pSizeX = opener.getPixelSizeX();
+        this.pSizeY = opener.getPixelSizeY();
+        this.pSizeZ = opener.getPixelSizeZ();
+        this.sizeT = opener.getSizeT();
         this.channel_index = c;
-        this.gt = gateway;
-        this.ctx = ctx;
-        this.pSizeX = pixels.getPixelSizeX(UnitsLength.MILLIMETER).getValue();
-        System.out.println(this.pSizeX);
-        this.pSizeY = pixels.getPixelSizeY(UnitsLength.MILLIMETER).getValue();
-        //this.pSizeZ = pixels.getPixelSizeZ(UnitsLength.MILLIMETER).getValue();
-        this.pSizeZ = 1;
-        System.out.println(this.pSizeY);
-        System.out.println(this.pSizeZ);
     }
 
     @Override

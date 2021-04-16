@@ -4,12 +4,13 @@ import bdv.util.BdvFunctions;
 import bdv.util.BdvStackSource;
 import bdv.util.volatiles.SharedQueue;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.*;
+import ch.epfl.biop.omero.omerosource.OmeroSource;
+import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
 import net.imagej.ImageJ;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.NumericType;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
-import omero.gateway.model.PixelsData;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
@@ -43,14 +44,20 @@ public class RawPixelsfromSource implements Command {
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
             SecurityContext ctx = getSecurityContext(gateway);
+            OmeroSourceOpener opener = new OmeroSourceOpener()
+                    .imageID(imageID)
+                    .gateway(gateway)
+                    .securityContext(ctx)
+                    .millimeter()
+                    .create();
             SharedQueue cc = new SharedQueue(8,4);
             //PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
 
             BdvStackSource bss = null;
 
-            //for (int c=0; c<pixels.getSizeC(); c++) {
-            for (int c=0; c<1; c++) {
-                OmeroSource concreteSource = new OmeroSource(imageID,c,ctx,gateway);
+            for (int c=0; c<opener.getSizeC(); c++) {
+            //for (int c=0; c<1; c++) {
+                OmeroSource concreteSource = new OmeroSource(opener,c);
                 VolatileBdvSource volatileSource = new VolatileBdvSource(concreteSource,
                         BioFormatsBdvSource.getVolatileOf((NumericType) concreteSource.getType()),
                         cc);
