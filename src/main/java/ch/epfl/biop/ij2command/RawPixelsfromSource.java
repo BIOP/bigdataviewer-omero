@@ -43,7 +43,7 @@ public class RawPixelsfromSource implements Command {
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
             SecurityContext ctx = getSecurityContext(gateway);
-            SharedQueue cc = new SharedQueue(2,4);
+            SharedQueue cc = new SharedQueue(8,4);
             //PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
 
             BdvStackSource bss = null;

@@ -44,6 +44,7 @@ public class OmeroSource implements Source<UnsignedShortType>{
 
     public OmeroSource(long imageID, int c, SecurityContext ctx, Gateway gateway) throws Exception {
         PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
+
         System.out.println("pixel type " + pixels.getPixelType());
         this.imageID = imageID;
         this.sizeT = pixels.getSizeT();
@@ -57,7 +58,6 @@ public class OmeroSource implements Source<UnsignedShortType>{
         this.pSizeZ = 1;
         System.out.println(this.pSizeY);
         System.out.println(this.pSizeZ);
-
     }
 
     @Override

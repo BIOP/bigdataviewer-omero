@@ -313,18 +313,17 @@ public class OmeroTools {
 
         System.out.println("X " + sizeX);
         System.out.println("Y " + sizeY);
-        //total_dim[0] = sizeX;
-        //total_dim[1] = sizeY;
-        total_dim[0] = sizeX-1000;
-        total_dim[1] = sizeY-1000;
+        total_dim[0] = sizeX;
+        total_dim[1] = sizeY;
         total_dim[2] = sizeZ;
 
         // Create cached image factory of Type Byte
         ReadOnlyCachedCellImgOptions options = new ReadOnlyCachedCellImgOptions();
         // Put cell dimensions to arbitrary values
-        int Xcellsize = 512;
-        int Ycellsize = 512;
-        options = options.cellDimensions(Xcellsize,Ycellsize, 1);
+        final int Xdefaultcellsize = 512;
+        final int Ydefaultcellsize = 512;
+
+        options = options.cellDimensions(Xdefaultcellsize,Ydefaultcellsize, 1);
         final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory(options);
 
         UnsignedShortType type = new UnsignedShortType();
@@ -342,12 +341,19 @@ public class OmeroTools {
                 //System.out.println("Offset : (" + xOffset + "," + yOffset + ")");
                 double[][] pixelIntensities;
 
-
                 try(RawDataFacility rdf = gateway.getFacility(RawDataFacility.class)) {
-                    synchronized (OmeroTools.class) {
+                    //synchronized (OmeroTools.class) {
+                        int Xcellsize = Xdefaultcellsize;
+                        int Ycellsize = Ydefaultcellsize;
+                        if (sizeX - xOffset < Xdefaultcellsize){
+                            Xcellsize = sizeX - xOffset;
+                        }
+                        if (sizeY - yOffset < Ydefaultcellsize) {
+                            Ycellsize = sizeY - yOffset;
+                        }
                         Plane2D plane2D = getRawTilefromPixelsData(ctx, rdf, pixels, (int) positions[2], t, c, xOffset, yOffset, Xcellsize, Ycellsize);
                         pixelIntensities = plane2D.getPixelValues();
-                    }
+                    //}
                     while (cursor.hasNext()) {
                         // move the cursor forward by one pixel
                         cursor.fwd();
