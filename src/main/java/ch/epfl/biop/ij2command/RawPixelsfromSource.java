@@ -92,11 +92,11 @@ public class RawPixelsfromSource implements Command {
                         new SourceAndConverter<>(volatileSource, volatileConverter));
 
             }
-            List<SourceAndConverter<UnsignedShortType>> list = new ArrayList<>();
+            List<SourceAndConverter<UnsignedShortType>> sacsList = new ArrayList<>();
             for (SourceAndConverter sac:sacs){
-                list.add(sac);
+                sacsList.add(sac);
             }
-            BdvFunctions.show(list,opener.getSizeT(),BdvOptions.options());
+            BdvFunctions.show(sacsList,opener.getSizeT(),BdvOptions.options());
 
             gateway.disconnect();
 
