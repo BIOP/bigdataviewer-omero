@@ -63,10 +63,10 @@ public class OmeroSource implements Source<UnsignedShortType>{
     }
 
     @Override
-    synchronized public RandomAccessibleInterval<UnsignedShortType> getSource(int t, int level) {
+    synchronized public RandomAccessibleInterval<UnsignedShortType> getSqource(int t, int level) {
         if (!map.containsKey(t)){
             try {
-            map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(imageID,channel_index,t,ctx,gt));
+            map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(imageID,channel_index,t,level,ctx,gt));
             } catch (Exception e) {
                 e.printStackTrace();
             }

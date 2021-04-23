@@ -131,6 +131,7 @@ public class OmeroSourceOpener {
     public OmeroSourceOpener create() throws Exception {
         PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(omeroImageID, gateway, securityContext);
         RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(securityContext);
+        rawPixStore.setPixelsId(pixels.getId(), false);
         this.sizeX = pixels.getSizeX();
         this.sizeY = pixels.getSizeY();
         this.sizeZ = pixels.getSizeZ();
@@ -145,6 +146,8 @@ public class OmeroSourceOpener {
         if(length != null){
             this.psizeZ = length.getValue();
         }
+        // must close the rawPixStore to free up resources
+        rawPixStore.close();
         return this;
     }
 
