@@ -19,6 +19,9 @@ import omero.gateway.model.PixelsData;
 import omero.model.Length;
 import omero.model.enums.UnitsLength;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Contains parameters that explain how to open all channel sources from an Omero Image
  */
@@ -44,25 +47,26 @@ public class OmeroSourceOpener {
     transient SharedQueue cc = new SharedQueue(2, 4);
     transient Gateway gateway;
     transient SecurityContext securityContext;
-    transient int sizeX, sizeY, sizeZ;
+    //transient int sizeX, sizeY, sizeZ;
     transient int sizeT;
     transient int sizeC;
     transient int nLevels;
     transient double psizeX;
     transient double psizeY;
     transient double psizeZ;
-
+    transient Map<Integer,int[]> imageSize;
+    transient Map<Integer,int[]> tileSize;
 
     // All get methods
-    public int getSizeX() {
-        return this.sizeX;
+    public int getSizeX(int level) { return this.imageSize.get(level)[0]; }
+    public int getSizeY(int level) {
+        return this.imageSize.get(level)[1];
     }
-    public int getSizeY() {
-        return this.sizeY;
+    public int getSizeZ(int level) {
+        return this.imageSize.get(level)[2];
     }
-    public int getSizeZ() {
-        return this.sizeZ;
-    }
+    public int getTileSizeX(int level){ return this.tileSize.get(level)[0]; }
+    public int getTileSizeY(int level){ return this.tileSize.get(level)[1]; }
     public int getSizeT() {
         return this.sizeT;
     }
@@ -132,12 +136,27 @@ public class OmeroSourceOpener {
         PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(omeroImageID, gateway, securityContext);
         RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(securityContext);
         rawPixStore.setPixelsId(pixels.getId(), false);
-        this.sizeX = pixels.getSizeX();
-        this.sizeY = pixels.getSizeY();
-        this.sizeZ = pixels.getSizeZ();
+        this.nLevels = rawPixStore.getResolutionLevels();
+        this.imageSize = new HashMap<>();
+        this.tileSize = new HashMap<>();
+        for (int level = 0; level<this.nLevels; level++){
+            int[] sizes = new int[3];
+            sizes[0] = rawPixStore.getResolutionDescriptions()[level].sizeX;
+            sizes[1] = rawPixStore.getResolutionDescriptions()[level].sizeY;
+            sizes[2] = pixels.getSizeZ();
+            System.out.println("level :"+ level);
+            System.out.println("Sizes XYZ :"+ sizes);
+            int[] tileSizes = new int[2];
+            /*rawPixStore.setResolutionLevel(level);
+            tileSizes[0] = rawPixStore.getTileSize()[0];
+            tileSizes[1] = rawPixStore.getTileSize()[1];
+            System.out.println("Tile sizes XYZ "+ tileSizes);
+            imageSize.put(level,sizes);
+            tileSize.put(level,tileSizes);*/
+        }
         this.sizeT = pixels.getSizeT();
         this.sizeC = pixels.getSizeC();
-        this.nLevels = rawPixStore.getResolutionLevels();
+
         this.psizeX = pixels.getPixelSizeX(this.u).getValue();
         this.psizeY = pixels.getPixelSizeY(this.u).getValue();
         //to handle 2D images

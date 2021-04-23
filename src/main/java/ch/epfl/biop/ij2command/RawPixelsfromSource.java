@@ -70,6 +70,7 @@ public class RawPixelsfromSource implements Command {
             RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(ctx);
             // img.getDefaultPixels() == pixels (PixelsData)
             rawPixStore.setPixelsId(img.getDefaultPixels().getId(), false);
+            System.out.println("ID : "+img.getDefaultPixels().getId());
             for (ResolutionDescription desc: rawPixStore.getResolutionDescriptions()) {
                 System.out.println("resolution : "+desc);
                 System.out.println("size X : "+desc.sizeX);
