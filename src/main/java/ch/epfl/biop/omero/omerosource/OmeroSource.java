@@ -32,6 +32,7 @@ public class OmeroSource implements Source<UnsignedShortType>{
     protected final DefaultInterpolators< UnsignedShortType > interpolators = new DefaultInterpolators<>();
 
     int sizeT;
+    int nLevels;
     final int channel_index;
     final long imageID;
     //final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new HashMap<>();
@@ -52,6 +53,7 @@ public class OmeroSource implements Source<UnsignedShortType>{
         this.pSizeY = opener.getPixelSizeY();
         this.pSizeZ = opener.getPixelSizeZ();
         this.sizeT = opener.getSizeT();
+        this.nLevels = opener.getNLevels();
         this.channel_index = c;
     }
 
@@ -84,11 +86,7 @@ public class OmeroSource implements Source<UnsignedShortType>{
 
     @Override
     public void getSourceTransform(int t, int level, AffineTransform3D transform) {
-        //try {
         transform.scale(pSizeX, pSizeY,pSizeZ);
-        //} catch (BigResult bigResult) {
-       //     bigResult.printStackTrace();
-        //}
     }
 
     @Override
@@ -109,7 +107,7 @@ public class OmeroSource implements Source<UnsignedShortType>{
 
     @Override
     public int getNumMipmapLevels() {
-        return 1;
+        return nLevels;
     }
 
     public int getSizeT(){

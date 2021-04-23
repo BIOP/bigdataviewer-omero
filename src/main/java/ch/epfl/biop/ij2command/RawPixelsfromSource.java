@@ -14,8 +14,12 @@ import net.imglib2.converter.Converter;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import omero.api.RawPixelsStorePrx;
+import omero.api.ResolutionDescription;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
+import omero.gateway.facility.BrowseFacility;
+import omero.gateway.model.ImageData;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
@@ -58,6 +62,28 @@ public class RawPixelsfromSource implements Command {
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
             SecurityContext ctx = getSecurityContext(gateway);
+
+
+            // Test pyramidal levels:
+            ImageData img = gateway.getFacility(BrowseFacility.class).getImage(ctx, imageID);
+            RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(ctx);
+            // img.getDefaultPixels() == pixels (PixelsData)
+            rawPixStore.setPixelsId(img.getDefaultPixels().getId(), false);
+            for (ResolutionDescription desc: rawPixStore.getResolutionDescriptions()) {
+                System.out.println("resolution : "+desc);
+                System.out.println("size X : "+desc.sizeX);
+                System.out.println("size Y : "+desc.sizeY);
+            }
+            rawPixStore.setResolutionLevel(2);
+            System.out.println("tile size : "+rawPixStore.getTileSize()[0]);
+            System.out.println("tile size : "+rawPixStore.getTileSize()[1]);
+            // Display the number of levels
+            System.out.println("number of levels : "+rawPixStore.getResolutionLevels());
+            System.out.println("current level : "+rawPixStore.getResolutionLevel());
+            byte[] tile = rawPixStore.getTile(0, 0, 0, 0, 0, 100, 100);
+            // End test pyramidal levels.
+
+
             OmeroSourceOpener opener = new OmeroSourceOpener()
                     .imageID(imageID)
                     .gateway(gateway)

@@ -9,8 +9,12 @@ import net.imglib2.FinalInterval;
 import net.imglib2.realtransform.AffineTransform3D;
 import ome.units.UNITS;
 import ome.units.unit.Unit;
+import omero.api.RawPixelsStorePrx;
+import omero.api.ResolutionDescription;
 import omero.gateway.SecurityContext;
 import omero.gateway.Gateway;
+import omero.gateway.facility.BrowseFacility;
+import omero.gateway.model.ImageData;
 import omero.gateway.model.PixelsData;
 import omero.model.Length;
 import omero.model.enums.UnitsLength;
@@ -43,6 +47,7 @@ public class OmeroSourceOpener {
     transient int sizeX, sizeY, sizeZ;
     transient int sizeT;
     transient int sizeC;
+    transient int nLevels;
     transient double psizeX;
     transient double psizeY;
     transient double psizeZ;
@@ -63,6 +68,9 @@ public class OmeroSourceOpener {
     }
     public int getSizeC() {
         return this.sizeC;
+    }
+    public int getNLevels() {
+        return this.nLevels;
     }
 
     public double getPixelSizeX() {
@@ -122,11 +130,13 @@ public class OmeroSourceOpener {
     // define size fields based on omero image ID, gateway and security context
     public OmeroSourceOpener create() throws Exception {
         PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(omeroImageID, gateway, securityContext);
+        RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(securityContext);
         this.sizeX = pixels.getSizeX();
         this.sizeY = pixels.getSizeY();
         this.sizeZ = pixels.getSizeZ();
         this.sizeT = pixels.getSizeT();
         this.sizeC = pixels.getSizeC();
+        this.nLevels = rawPixStore.getResolutionLevels();
         this.psizeX = pixels.getPixelSizeX(this.u).getValue();
         this.psizeY = pixels.getPixelSizeY(this.u).getValue();
         //to handle 2D images
