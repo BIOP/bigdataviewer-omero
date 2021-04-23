@@ -307,10 +307,10 @@ public class OmeroTools {
 
     public static RandomAccessibleInterval openTiledRawRandomAccessibleInterval(long imageID, int c, int t,int level,SecurityContext ctx, Gateway gateway) throws Exception {
         final PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
-        final RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(ctx);
-        rawPixStore.setPixelsId(pixels.getId(), false);
+        //final RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(ctx);
+        //rawPixStore.setPixelsId(pixels.getId(), false);
         // set raw pixel to the current resolution level
-        rawPixStore.setResolutionLevel(level);
+        //rawPixStore.setResolutionLevel(level);
 
         int sizeX = pixels.getSizeX();
         int sizeY = pixels.getSizeY();

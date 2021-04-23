@@ -8,6 +8,7 @@ import bdv.viewer.SourceAndConverter;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.*;
 import ch.epfl.biop.omero.omerosource.OmeroSource;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
+import ch.epfl.biop.omero.omerosource.OmeroSourceUnsignedShort;
 import jdk.jfr.Unsigned;
 import net.imagej.ImageJ;
 import net.imglib2.converter.Converter;
@@ -98,7 +99,7 @@ public class RawPixelsfromSource implements Command {
 
             for (int c=0; c<opener.getSizeC(); c++) {
             //for (int c=0; c<1; c++) {
-                OmeroSource concreteSource = new OmeroSource(opener,c);
+                OmeroSource concreteSource = new OmeroSourceUnsignedShort(opener,c);
                 VolatileBdvSource volatileSource = new VolatileBdvSource(concreteSource,
                         BioFormatsBdvSource.getVolatileOf((NumericType) concreteSource.getType()),
                         cc);

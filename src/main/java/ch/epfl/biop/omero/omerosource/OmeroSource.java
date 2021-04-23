@@ -3,11 +3,15 @@ package ch.epfl.biop.omero.omerosource;
 import bdv.util.DefaultInterpolators;
 import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
+import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSourceRGB24bits;
+import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSourceUnsignedByte;
+import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSourceUnsignedShort;
 import ch.epfl.biop.ij2command.OmeroTools;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.ExtendedRandomAccessibleInterval;
 import net.imglib2.view.Views;
@@ -27,16 +31,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.locks.ReentrantLock;
 
 
-public class OmeroSource implements Source<UnsignedShortType>{
+public abstract class OmeroSource<T extends NumericType< T >> implements Source<T>{
 
-    protected final DefaultInterpolators< UnsignedShortType > interpolators = new DefaultInterpolators<>();
+    protected final DefaultInterpolators< T > interpolators = new DefaultInterpolators<>();
 
     int sizeT;
     int nLevels;
     final int channel_index;
     final long imageID;
     //final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new HashMap<>();
-    final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new ConcurrentHashMap<>();
+    //Concurrent hash map allows different threads to work at the same time
+    final Map<Integer,Map<Integer,RandomAccessibleInterval<T>>> raiMap = new ConcurrentHashMap<>();
     SecurityContext ctx;
     final Gateway gt;
     double pSizeX;
@@ -61,9 +66,9 @@ public class OmeroSource implements Source<UnsignedShortType>{
     public boolean isPresent(int t) {
         return t<sizeT;
     }
-
+    /*
     @Override
-    synchronized public RandomAccessibleInterval<UnsignedShortType> getSqource(int t, int level) {
+    synchronized public RandomAccessibleInterval<UnsignedShortType> getSource(int t, int level) {
         if (!map.containsKey(t)){
             try {
             map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(imageID,channel_index,t,level,ctx,gt));
@@ -72,15 +77,43 @@ public class OmeroSource implements Source<UnsignedShortType>{
             }
         }
         return map.get(t);
+    }*/
+
+
+    /**
+     * The core function of the source which is implemented in subclasses
+     * @see BioFormatsBdvSourceRGB24bits
+     * @see BioFormatsBdvSourceUnsignedByte
+     * @see BioFormatsBdvSourceUnsignedShort
+     * @param t // timepoint
+     * @param level // resolution level
+     * @return
+     */
+    abstract public RandomAccessibleInterval<T> createSource(int t, int level);
+
+    /**
+     * Returns stored RAI of requested timepoint and resolution level
+     * @param t
+     * @param level
+     * @return
+     */
+    @Override
+    public RandomAccessibleInterval<T> getSource(int t, int level) {
+        if (raiMap.containsKey(t)) {
+            if (raiMap.get(t).containsKey(level)) {
+                return raiMap.get(t).get(level);
+            }
+        }
+        return createSource(t,level);
     }
 
     @Override
-    public RealRandomAccessible<UnsignedShortType> getInterpolatedSource(int t, int level, Interpolation method) {
-        final UnsignedShortType zero = getType();
+    public RealRandomAccessible<T> getInterpolatedSource(int t, int level, Interpolation method) {
+        final T zero = getType();
         zero.setZero();
-        ExtendedRandomAccessibleInterval<UnsignedShortType, RandomAccessibleInterval< UnsignedShortType >>
+        ExtendedRandomAccessibleInterval<T, RandomAccessibleInterval< T >>
                 eView = Views.extendZero(getSource( t, level ));
-        RealRandomAccessible< UnsignedShortType > realRandomAccessible = Views.interpolate( eView, interpolators.get(method) );
+        RealRandomAccessible< T > realRandomAccessible = Views.interpolate( eView, interpolators.get(method) );
         return realRandomAccessible;
     }
 
@@ -90,10 +123,7 @@ public class OmeroSource implements Source<UnsignedShortType>{
     }
 
     @Override
-    public UnsignedShortType getType() {
-        UnsignedShortType type = new UnsignedShortType();
-        return type;
-    }
+    abstract public T getType();
 
     @Override
     public String getName() {
