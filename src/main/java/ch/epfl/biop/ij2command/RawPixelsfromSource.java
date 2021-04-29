@@ -64,7 +64,6 @@ public class RawPixelsfromSource implements Command {
             System.out.println( "Session active : "+gateway.isConnected() );
             SecurityContext ctx = getSecurityContext(gateway);
 
-
             // Test pyramidal levels:
             ImageData img = gateway.getFacility(BrowseFacility.class).getImage(ctx, imageID);
             RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(ctx);
@@ -76,6 +75,13 @@ public class RawPixelsfromSource implements Command {
                 System.out.println("size X : "+desc.sizeX);
                 System.out.println("size Y : "+desc.sizeY);
             }
+            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[0].sizeX);
+            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[1].sizeX);
+            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[2].sizeX);
+            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[3].sizeX);
+            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[4].sizeX);
+            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[5].sizeX);
+
             rawPixStore.setResolutionLevel(2);
             System.out.println("tile size : "+rawPixStore.getTileSize()[0]);
             System.out.println("tile size : "+rawPixStore.getTileSize()[1]);

@@ -7,6 +7,7 @@ import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSourceRGB24bits
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSourceUnsignedByte;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSourceUnsignedShort;
 import ch.epfl.biop.ij2command.OmeroTools;
+import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
@@ -47,6 +48,7 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
     double pSizeX;
     double pSizeY;
     double pSizeZ;
+    OmeroSourceOpener opener;
 
     public OmeroSource(OmeroSourceOpener opener, int c) throws Exception {
         //PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
@@ -60,6 +62,7 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
         this.sizeT = opener.getSizeT();
         this.nLevels = opener.getNLevels();
         this.channel_index = c;
+        this.opener = opener;
     }
 
     @Override

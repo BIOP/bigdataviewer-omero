@@ -21,86 +21,81 @@ public class OmeroSourceUnsignedShort extends OmeroSource<UnsignedShortType> {
 
     @Override
     public RandomAccessibleInterval<UnsignedShortType> createSource(int t, int level) {
-        /*
+
         try {
             if (!raiMap.containsKey(t)) {
                 raiMap.put(t, new ConcurrentHashMap<>());
             }
 
-            //RawPixelsStorePrx rawPixStore = gt.getPixelsStore(ctx);
-            // img.getDefaultPixels() == pixels (PixelsData)
-            //rawPixStore.setPixelsId(img.getDefaultPixels().getId(), false);
-            //RandomAccessibleInterval<UnsignedShortType> rai = OmeroTools.openTiledRawRandomAccessibleInterval(imageID,channel_index,t,level,ctx,gt);
-
             // Create cached image factory of Type Byte
             ReadOnlyCachedCellImgOptions options = new ReadOnlyCachedCellImgOptions();
-            // Put cell dimensions to arbitrary values
-            //TODO : change this to rawPixStore.getTileSize()
-            final int Xdefaultcellsize = 512;
-            final int Ydefaultcellsize = 512;
 
+            int sx = this.opener.getSizeX(level);
+            int sy = this.opener.getSizeY(level);
+            int sz = this.opener.getSizeZ(level);
 
-            options = options.cellDimensions(Xdefaultcellsize,Ydefaultcellsize, 1);
+            // Set cell dimensions according to level
+            int xc = this.opener.getTileSizeX(level);
+            int yc = this.opener.getTileSizeY(level);
+            int zc = 1;
+
+            // Creates cached image factory of Type Byte
+            options = options.cellDimensions(xc,yc,zc);
             final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory(options);
 
             // Creates image, with cell Consumer method, which creates the image
             final Img<UnsignedShortType> rai = factory.create(new long[]{sx, sy, sz}, new UnsignedShortType(),
-                    cell -> {
-                        try {
-                            IFormatReader reader = readerPool.acquire();
-                            reader.setSeries(this.cSerie);
-                            reader.setResolution(level);
-                            Cursor<UnsignedShortType> out = Views.flatIterable(cell).cursor();
-                            int minZ = (int) cell.min(2);
-                            int maxZ = Math.min(minZ + zc, reader.getSizeZ());
+                cell -> {
+                    try {
+                        RawPixelsStorePrx rawPixStore = gt.getPixelsStore(ctx);
+                        // chopper l'ID pixel dans le opener
+                        rawPixStore.setPixelsId(this.opener.getPixelsID(), false);
+                        //RandomAccessibleInterval<UnsignedShortType> rai = OmeroTools.openTiledRawRandomAccessibleInterval(imageID,channel_index,t,level,ctx,gt);
+                        rawPixStore.setResolutionLevel(level);
 
-                            for (int z = minZ; z < maxZ; z++) {
-                                int minX = (int) cell.min(0);
-                                int maxX = Math.min(minX + xc, reader.getSizeX());
+                        Cursor<UnsignedShortType> out = Views.flatIterable(cell).cursor();
 
-                                int minY = (int) cell.min(1);
-                                int maxY = Math.min(minY + yc, reader.getSizeY());
+                        int minX = (int) cell.min(0);
+                        int maxX = Math.min(minX + xc, sx);
 
-                                int w = maxX - minX;
-                                int h = maxY - minY;
+                        int minY = (int) cell.min(1);
+                        int maxY = Math.min(minY + yc, sy);
 
+                        int w = maxX - minX;
+                        int h = maxY - minY;
 
-                                int totBytes = (w * h) * 2;
+                        int totBytes = (w * h) * 2;
+                        int idxPx = 0;
 
-                                int idxPx = 0;
+                        //byte[] bytes = reader.openBytes(switchZandC ? reader.getIndex(cChannel, z, t) : reader.getIndex(z, cChannel, t), minX, minY, w, h);
+                        //TODO change z!
+                        byte[] bytes = rawPixStore.getTile(0, channel_index, t, minX, minY, w, h);
 
-                                byte[] bytes = reader.openBytes(switchZandC ? reader.getIndex(cChannel, z, t) : reader.getIndex(z, cChannel, t), minX, minY, w, h);
-
-                                if (littleEndian) { // TODO improve this dirty switch block
-                                    while ((out.hasNext()) && (idxPx < totBytes)) {
-                                        int v = ((bytes[idxPx + 1] & 0xff) << 8) | (bytes[idxPx] & 0xff);
-                                        out.next().set(v);
-                                        idxPx += 2;
-                                    }
-                                } else {
-                                    while ((out.hasNext()) && (idxPx < totBytes)) {
-                                        int v = ((bytes[idxPx] & 0xff) << 8) | (bytes[idxPx + 1] & 0xff);
-                                        out.next().set(v);
-                                        idxPx += 2;
-                                    }
-                                }
+                        boolean littleEndian = false;
+                        if (littleEndian) { // TODO improve this dirty switch block
+                            while ((out.hasNext()) && (idxPx < totBytes)) {
+                                int v = ((bytes[idxPx + 1] & 0xff) << 8) | (bytes[idxPx] & 0xff);
+                                out.next().set(v);
+                                idxPx += 2;
                             }
-                            readerPool.recycle(reader);
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                        } else {
+                            while ((out.hasNext()) && (idxPx < totBytes)) {
+                                int v = ((bytes[idxPx] & 0xff) << 8) | (bytes[idxPx + 1] & 0xff);
+                                out.next().set(v);
+                                idxPx += 2;
+                            }
                         }
-                    });
-
-
+                        rawPixStore.close();
+                        } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
             raiMap.get(t).put(level, rai);
             return raiMap.get(t).get(level);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
         }
-        */
-
-        return null;
     }
 
     @Override

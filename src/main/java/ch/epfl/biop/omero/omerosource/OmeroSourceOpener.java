@@ -5,6 +5,7 @@ import bdv.util.volatiles.SharedQueue;
 import ch.epfl.biop.bdv.bioformats.BioFormatsMetaDataHelper;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvOpener;
 import ch.epfl.biop.ij2command.OmeroTools;
+
 import net.imglib2.FinalInterval;
 import net.imglib2.realtransform.AffineTransform3D;
 import ome.units.UNITS;
@@ -56,6 +57,7 @@ public class OmeroSourceOpener {
     transient double psizeZ;
     transient Map<Integer,int[]> imageSize;
     transient Map<Integer,int[]> tileSize;
+    transient long pixelsID;
 
     // All get methods
     public int getSizeX(int level) { return this.imageSize.get(level)[0]; }
@@ -75,6 +77,9 @@ public class OmeroSourceOpener {
     }
     public int getNLevels() {
         return this.nLevels;
+    }
+    public long getPixelsID() {
+        return this.pixelsID;
     }
 
     public double getPixelSizeX() {
@@ -135,24 +140,26 @@ public class OmeroSourceOpener {
     public OmeroSourceOpener create() throws Exception {
         PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(omeroImageID, gateway, securityContext);
         RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(securityContext);
-        rawPixStore.setPixelsId(pixels.getId(), false);
+        this.pixelsID = pixels.getId();
+        rawPixStore.setPixelsId(this.pixelsID, false);
         this.nLevels = rawPixStore.getResolutionLevels();
         this.imageSize = new HashMap<>();
         this.tileSize = new HashMap<>();
+        System.out.println("number of levels : "+rawPixStore.getResolutionLevels());
         for (int level = 0; level<this.nLevels; level++){
             int[] sizes = new int[3];
+            System.out.println("level :"+ level);
             sizes[0] = rawPixStore.getResolutionDescriptions()[level].sizeX;
             sizes[1] = rawPixStore.getResolutionDescriptions()[level].sizeY;
+            System.out.println("Sizes XYZ :"+ sizes[0]);
             sizes[2] = pixels.getSizeZ();
-            System.out.println("level :"+ level);
-            System.out.println("Sizes XYZ :"+ sizes);
             int[] tileSizes = new int[2];
-            /*rawPixStore.setResolutionLevel(level);
+            //rawPixStore.setResolutionLevel(level);
             tileSizes[0] = rawPixStore.getTileSize()[0];
             tileSizes[1] = rawPixStore.getTileSize()[1];
-            System.out.println("Tile sizes XYZ "+ tileSizes);
+            System.out.println("Tile sizes XYZ "+ tileSizes[0]);
             imageSize.put(level,sizes);
-            tileSize.put(level,tileSizes);*/
+            tileSize.put(level,tileSizes);
         }
         this.sizeT = pixels.getSizeT();
         this.sizeC = pixels.getSizeC();
