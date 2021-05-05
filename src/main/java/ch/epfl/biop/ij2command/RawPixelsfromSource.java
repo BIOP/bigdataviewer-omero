@@ -69,7 +69,7 @@ public class RawPixelsfromSource implements Command {
             RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(ctx);
             // img.getDefaultPixels() == pixels (PixelsData)
             rawPixStore.setPixelsId(img.getDefaultPixels().getId(), false);
-            System.out.println("ID : "+img.getDefaultPixels().getId());
+            System.out.println("pixel ID : "+img.getDefaultPixels().getId());
             for (ResolutionDescription desc: rawPixStore.getResolutionDescriptions()) {
                 System.out.println("resolution : "+desc);
                 System.out.println("size X : "+desc.sizeX);
@@ -82,13 +82,22 @@ public class RawPixelsfromSource implements Command {
             System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[4].sizeX);
             System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[5].sizeX);
 
-            rawPixStore.setResolutionLevel(2);
-            System.out.println("tile size : "+rawPixStore.getTileSize()[0]);
-            System.out.println("tile size : "+rawPixStore.getTileSize()[1]);
+            for (int i=0;i<6;i++) {
+                rawPixStore.setResolutionLevel(i);
+                System.out.println("current level (level) : "+i);
+                System.out.println("current level (getlevel): "+rawPixStore.getResolutionLevel());
+                System.out.println("Tile size: "+rawPixStore.getTileSize()[1]);
+                //263 * 263 is the max supported tile size, at least for this dataset. Why?
+                byte[] tile = rawPixStore.getTile(0, 0, 0, 0, 0, 403, 263);
+                //System.out.println("tile size Y: "+rawPixStore.getTileSize()[1]);
+            }
+
             // Display the number of levels
             System.out.println("number of levels : "+rawPixStore.getResolutionLevels());
             System.out.println("current level : "+rawPixStore.getResolutionLevel());
             byte[] tile = rawPixStore.getTile(0, 0, 0, 0, 0, 100, 100);
+
+            System.out.println("I'm done!");
             // End test pyramidal levels.
 
 
@@ -110,15 +119,7 @@ public class RawPixelsfromSource implements Command {
                 VolatileBdvSource volatileSource = new VolatileBdvSource(concreteSource,
                         BioFormatsBdvSource.getVolatileOf((NumericType) concreteSource.getType()),
                         cc);
-                /*bss = BdvFunctions.show(volatileSource);
-                //bss = BdvFunctions.show(source,pixels.getSizeT());
 
-                //add a time slider
-                bss.getBdvHandle().getViewerPanel().setNumTimepoints(concreteSource.getSizeT());
-                bss.setDisplayRange(0, 255);
-                // Color : Random color for each channel
-                bss.setColor(new ARGBType(ARGBType.rgba(255*Math.random(),255*Math.random(),255*Math.random(),1)));
-                */
                 Converter concreteConverter = SourceAndConverterHelper.createConverter(concreteSource);
                 Converter volatileConverter = SourceAndConverterHelper.createConverter(volatileSource);
 
@@ -132,12 +133,29 @@ public class RawPixelsfromSource implements Command {
             }
             BdvFunctions.show(sacsList,opener.getSizeT(),BdvOptions.options());
 
-            gateway.disconnect();
+            //gateway.disconnect();
+
+            // End of session
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                gateway.disconnect();
+                System.out.println("Gateway disconnected");
+            }));
+
 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
+    /*bss = BdvFunctions.show(volatileSource);
+                //bss = BdvFunctions.show(source,pixels.getSizeT());
+
+                //add a time slider
+                bss.getBdvHandle().getViewerPanel().setNumTimepoints(concreteSource.getSizeT());
+                bss.setDisplayRange(0, 255);
+                // Color : Random color for each channel
+                bss.setColor(new ARGBType(ARGBType.rgba(255*Math.random(),255*Math.random(),255*Math.random(),1)));
+                */
 
 
 

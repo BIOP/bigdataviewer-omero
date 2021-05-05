@@ -11,6 +11,8 @@ import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.Views;
 import omero.api.RawPixelsStorePrx;
+import omero.gateway.facility.BrowseFacility;
+import omero.gateway.model.ImageData;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -30,6 +32,8 @@ public class OmeroSourceUnsignedShort extends OmeroSource<UnsignedShortType> {
             // Create cached image factory of Type Byte
             ReadOnlyCachedCellImgOptions options = new ReadOnlyCachedCellImgOptions();
 
+            //TODO: remove this
+            //level = 2;
             int sx = this.opener.getSizeX(level);
             int sy = this.opener.getSizeY(level);
             int sz = this.opener.getSizeZ(level);
@@ -46,52 +50,82 @@ public class OmeroSourceUnsignedShort extends OmeroSource<UnsignedShortType> {
             // Creates image, with cell Consumer method, which creates the image
             final Img<UnsignedShortType> rai = factory.create(new long[]{sx, sy, sz}, new UnsignedShortType(),
                 cell -> {
+
                     try {
-                        RawPixelsStorePrx rawPixStore = gt.getPixelsStore(ctx);
-                        // chopper l'ID pixel dans le opener
-                        rawPixStore.setPixelsId(this.opener.getPixelsID(), false);
-                        //RandomAccessibleInterval<UnsignedShortType> rai = OmeroTools.openTiledRawRandomAccessibleInterval(imageID,channel_index,t,level,ctx,gt);
-                        rawPixStore.setResolutionLevel(level);
+                        synchronized (OmeroTools.class) {
+                            RawPixelsStorePrx rawPixStore = gt.getPixelsStore(ctx);
 
-                        Cursor<UnsignedShortType> out = Views.flatIterable(cell).cursor();
+                            //ImageData img = gt.getFacility(BrowseFacility.class).getImage(ctx, imageID);
+                            //RawPixelsStorePrx rawPixStore = gt.getPixelsStore(ctx);
+                            //rawPixStore.setPixelsId(img.getDefaultPixels().getId(), false);
+                            System.out.println("loader image ID : " +imageID);
+                            System.out.println("loader pixel ID : " +this.opener.getPixelsID());
+                            System.out.println(ctx);
+                            System.out.println(gt);
+                            rawPixStore.setPixelsId(this.opener.getPixelsID(), false);
+                            //RandomAccessibleInterval<UnsignedShortType> rai = OmeroTools.openTiledRawRandomAccessibleInterval(imageID,channel_index,t,level,ctx,gt);
+                            //test different resolution levels
+                            rawPixStore.setResolutionLevel(level);
 
-                        int minX = (int) cell.min(0);
-                        int maxX = Math.min(minX + xc, sx);
+                            System.out.println("loader current level : "+rawPixStore.getResolutionLevel());
 
-                        int minY = (int) cell.min(1);
-                        int maxY = Math.min(minY + yc, sy);
+                            Cursor<UnsignedShortType> out = Views.flatIterable(cell).cursor();
 
-                        int w = maxX - minX;
-                        int h = maxY - minY;
+                            //cell connait sa position dans l'espace (dans la grande image)
+                            int minX = (int) cell.min(0);
+                            System.out.println("sx "+sx);
+                            System.out.println("minX "+minX);
+                            //System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[level].sizeX);
+                            int maxX = Math.min(minX + xc, sx);
+                            System.out.println("maxX "+maxX);
 
-                        int totBytes = (w * h) * 2;
-                        int idxPx = 0;
+                            int minY = (int) cell.min(1);
+                            int maxY = Math.min(minY + yc, sy);
+                            System.out.println("minY "+minY);
+                            System.out.println("maxY "+maxY);
 
-                        //byte[] bytes = reader.openBytes(switchZandC ? reader.getIndex(cChannel, z, t) : reader.getIndex(z, cChannel, t), minX, minY, w, h);
-                        //TODO change z!
-                        byte[] bytes = rawPixStore.getTile(0, channel_index, t, minX, minY, w, h);
+                            int w = maxX - minX;
+                            int h = maxY - minY;
 
-                        boolean littleEndian = false;
-                        if (littleEndian) { // TODO improve this dirty switch block
-                            while ((out.hasNext()) && (idxPx < totBytes)) {
-                                int v = ((bytes[idxPx + 1] & 0xff) << 8) | (bytes[idxPx] & 0xff);
-                                out.next().set(v);
-                                idxPx += 2;
+                            int totBytes = (w * h) * 2;
+                            int idxPx = 0;
+
+                            System.out.println("X "+ minX);
+                            System.out.println("Y "+ minY);
+
+                            //byte[] bytes = reader.openBytes(switchZandC ? reader.getIndex(cChannel, z, t) : reader.getIndex(z, cChannel, t), minX, minY, w, h);
+                            //byte[] bytes = rawPixStore.getTile((int) cell.min(2), channel_index, t, minX, minY, w, h);
+                            //System.out.println("level : " + level + ": "+ minX + " "+ minY);
+                            byte[] bytes = rawPixStore.getTile(0, 0, 0, minX, minY, w, h);
+                            //byte[] bytes = rawPixStore.getTile(0, 0, 0, 0, 0, w, h);
+                            //System.out.println("level : " + level + ": "+ minX + " "+ minY + " Success");
+                            //byte[] bytes = new byte[w*h*2];
+
+
+                            boolean littleEndian = false;
+                            if (littleEndian) { // TODO improve this dirty switch block
+                                while ((out.hasNext()) && (idxPx < totBytes)) {
+                                    int v = ((bytes[idxPx + 1] & 0xff) << 8) | (bytes[idxPx] & 0xff);
+                                    out.next().set(v);
+                                    idxPx += 2;
+                                }
+                            } else {
+                                while ((out.hasNext()) && (idxPx < totBytes)) {
+                                    int v = ((bytes[idxPx] & 0xff) << 8) | (bytes[idxPx + 1] & 0xff);
+                                    out.next().set(v);
+                                    idxPx += 2;
+                                }
                             }
-                        } else {
-                            while ((out.hasNext()) && (idxPx < totBytes)) {
-                                int v = ((bytes[idxPx] & 0xff) << 8) | (bytes[idxPx + 1] & 0xff);
-                                out.next().set(v);
-                                idxPx += 2;
-                            }
+                            rawPixStore.close();
                         }
-                        rawPixStore.close();
                         } catch (Exception e) {
                         e.printStackTrace();
                     }
                 });
+
             raiMap.get(t).put(level, rai);
             return raiMap.get(t).get(level);
+
         } catch (Exception e) {
             e.printStackTrace();
             return null;
