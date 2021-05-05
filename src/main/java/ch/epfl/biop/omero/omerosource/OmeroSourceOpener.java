@@ -145,7 +145,7 @@ public class OmeroSourceOpener {
         this.nLevels = rawPixStore.getResolutionLevels();
         this.imageSize = new HashMap<>();
         this.tileSize = new HashMap<>();
-        System.out.println("OMERO SOURCE OPENER: number of levels : "+rawPixStore.getResolutionLevels());
+        System.out.println("number of levels : "+rawPixStore.getResolutionLevels());
         for (int level = 0; level<this.nLevels; level++){
             int[] sizes = new int[3];
             System.out.println("level :"+ level);
@@ -157,8 +157,8 @@ public class OmeroSourceOpener {
             //rawPixStore.setResolutionLevel(level);
             tileSizes[0] = Math.min(rawPixStore.getTileSize()[0],rawPixStore.getResolutionDescriptions()[rawPixStore.getResolutionLevels()-1].sizeX);
             tileSizes[1] = Math.min(rawPixStore.getTileSize()[1],rawPixStore.getResolutionDescriptions()[rawPixStore.getResolutionLevels()-1].sizeY);
-            //tileSizes[0] = 100;
-            //tileSizes[1] = 100;
+            //tileSizes[0] = 50;
+            //tileSizes[1] = 50;
             System.out.println("Tile sizes XYZ "+ tileSizes[0]);
             imageSize.put(level,sizes);
             tileSize.put(level,tileSizes);

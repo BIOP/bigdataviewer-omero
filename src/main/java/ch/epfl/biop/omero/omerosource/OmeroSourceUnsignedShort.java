@@ -32,8 +32,6 @@ public class OmeroSourceUnsignedShort extends OmeroSource<UnsignedShortType> {
             // Create cached image factory of Type Byte
             ReadOnlyCachedCellImgOptions options = new ReadOnlyCachedCellImgOptions();
 
-            //TODO: remove this
-            //level = 2;
             int sx = this.opener.getSizeX(level);
             int sy = this.opener.getSizeY(level);
             int sz = this.opener.getSizeZ(level);
@@ -65,7 +63,8 @@ public class OmeroSourceUnsignedShort extends OmeroSource<UnsignedShortType> {
                             rawPixStore.setPixelsId(this.opener.getPixelsID(), false);
                             //RandomAccessibleInterval<UnsignedShortType> rai = OmeroTools.openTiledRawRandomAccessibleInterval(imageID,channel_index,t,level,ctx,gt);
                             //test different resolution levels
-                            rawPixStore.setResolutionLevel(level);
+                            //TODO: change this
+                            rawPixStore.setResolutionLevel(5-level);
 
                             System.out.println("loader current level : "+rawPixStore.getResolutionLevel());
 
@@ -98,6 +97,7 @@ public class OmeroSourceUnsignedShort extends OmeroSource<UnsignedShortType> {
                             //System.out.println("level : " + level + ": "+ minX + " "+ minY);
                             byte[] bytes = rawPixStore.getTile(0, 0, 0, minX, minY, w, h);
                             //byte[] bytes = rawPixStore.getTile(0, 0, 0, 0, 0, w, h);
+                            //byte[] bytes = rawPixStore.getTile(0, 0, 0, 50, 50, w, h);
                             //System.out.println("level : " + level + ": "+ minX + " "+ minY + " Success");
                             //byte[] bytes = new byte[w*h*2];
 

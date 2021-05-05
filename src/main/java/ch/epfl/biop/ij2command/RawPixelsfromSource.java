@@ -82,20 +82,22 @@ public class RawPixelsfromSource implements Command {
             System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[4].sizeX);
             System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[5].sizeX);
 
-            for (int i=0;i<6;i++) {
+            //for (int i=0;i<6;i++) {
+            int i=5;
                 rawPixStore.setResolutionLevel(i);
                 System.out.println("current level (level) : "+i);
                 System.out.println("current level (getlevel): "+rawPixStore.getResolutionLevel());
                 System.out.println("Tile size: "+rawPixStore.getTileSize()[1]);
                 //263 * 263 is the max supported tile size, at least for this dataset. Why?
-                byte[] tile = rawPixStore.getTile(0, 0, 0, 0, 0, 403, 263);
+                byte[] tile = rawPixStore.getTile(0, 0, 0, 0, 0, 512, 512);
+                //byte[] tile = rawPixStore.getTile(0, 0, 0, 20, 20, 20, 20);
                 //System.out.println("tile size Y: "+rawPixStore.getTileSize()[1]);
-            }
+            //}
 
             // Display the number of levels
             System.out.println("number of levels : "+rawPixStore.getResolutionLevels());
             System.out.println("current level : "+rawPixStore.getResolutionLevel());
-            byte[] tile = rawPixStore.getTile(0, 0, 0, 0, 0, 100, 100);
+            //byte[] tile = rawPixStore.getTile(0, 0, 0, 0, 0, 100, 100);
 
             System.out.println("I'm done!");
             // End test pyramidal levels.
