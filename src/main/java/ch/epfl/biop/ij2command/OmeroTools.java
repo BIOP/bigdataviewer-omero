@@ -28,6 +28,10 @@ import omero.model.enums.UnitsLength;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.locks.ReentrantLock;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class OmeroTools {
 
@@ -123,20 +127,20 @@ public class OmeroTools {
             return p;
     }
 
-    public static Plane2D getRawTilefromPixelsData(SecurityContext ctx, RawDataFacility rdf, PixelsData pixels, int z, int t, int c, int x, int y, int w, int h) throws Exception{
+   public static Plane2D getRawTilefromPixelsData(SecurityContext ctx, RawDataFacility rdf, PixelsData pixels, int z, int t, int c, int x, int y, int w, int h) throws Exception{
             Plane2D p = rdf.getTile(ctx, pixels, z, t, c, x, y, w, h);
             return p;
     }
 
-    public static PixelsData getPixelsDataFromOmeroID(long imageID, Gateway gateway) throws Exception{
+    public static PixelsData getPixelsDataFromOmeroID(long imageID, Gateway gateway, SecurityContext ctx) throws Exception{
 
-            SecurityContext ctx = getSecurityContext(gateway);
             BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
             ImageData image = browse.getImage(ctx, imageID);
             PixelsData pixels = image.getDefaultPixels();
             return pixels;
 
     }
+
 
     public static RandomAccessibleInterval openRandomAccessibleInterval(String host, String username, String password, long imageID, boolean windowless){
         ImagePlus image = OmeroTools.openImagePlus(host,username,password,imageID, windowless);
@@ -299,7 +303,8 @@ public class OmeroTools {
     }
 
 
-    public static RandomAccessibleInterval openTiledRawRandomAccessibleInterval(SecurityContext ctx, RawDataFacility rdf, PixelsData pixels, int t, int c) throws Exception {
+    public static RandomAccessibleInterval openTiledRawRandomAccessibleInterval(long imageID, int c, int t,SecurityContext ctx, Gateway gateway) throws Exception {
+        final PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
         int sizeX = pixels.getSizeX();
         int sizeY = pixels.getSizeY();
         int sizeZ = pixels.getSizeZ();
@@ -310,41 +315,45 @@ public class OmeroTools {
         System.out.println("Y " + sizeY);
         total_dim[0] = sizeX;
         total_dim[1] = sizeY;
-        //total_dim[0] = sizeX-1000;
-        //total_dim[1] = sizeY-1000;
         total_dim[2] = sizeZ;
 
         // Create cached image factory of Type Byte
         ReadOnlyCachedCellImgOptions options = new ReadOnlyCachedCellImgOptions();
         // Put cell dimensions to arbitrary values
-        int Xcellsize = 512;
-        int Ycellsize = 512;
-        options = options.cellDimensions(Xcellsize,Ycellsize, 1);
+        final int Xdefaultcellsize = 512;
+        final int Ydefaultcellsize = 512;
+
+        options = options.cellDimensions(Xdefaultcellsize,Ydefaultcellsize, 1);
         final ReadOnlyCachedCellImgFactory factory = new ReadOnlyCachedCellImgFactory(options);
 
         UnsignedShortType type = new UnsignedShortType();
         CellLoader<UnsignedShortType> loader = new CellLoader<UnsignedShortType>(){
             @Override
-            public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) throws Exception {
+            public void load(SingleCellArrayImg<UnsignedShortType, ?> singleCellArrayImg) {
 
-                    long[] positions = new long[3];
-                    Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
-                    cursor.localize(positions);
-                    //Plane2D plane2D = getRawPlanefromPixelsData(gateway, pixels, (int) positions[2], t, c);
+                long[] positions = new long[3];
+                Cursor<UnsignedShortType> cursor = singleCellArrayImg.localizingCursor();
+                cursor.localize(positions);
 
-                    // +1 since cursor starts just before the block
-                    //int xOffset = 0;
+                // +1 since cursor starts just before the block
+                int xOffset = (int) positions[0] + 1;
+                int yOffset = (int) positions[1];
+                //System.out.println("Offset : (" + xOffset + "," + yOffset + ")");
+                double[][] pixelIntensities;
 
-                    int xOffset = (int) positions[0] + 1;
-                    int yOffset = (int) positions[1];
-                    System.out.println("Xoffset : " + xOffset);
-                    System.out.println("Yoffset : " + yOffset);
-                    double[][] pixelIntensities;
-
-                synchronized (OmeroTools.class){
-                    Plane2D plane2D = getRawTilefromPixelsData(ctx, rdf, pixels, (int) positions[2], t, c, xOffset, yOffset, Xcellsize, Ycellsize);
-                    pixelIntensities = plane2D.getPixelValues();
-                }
+                try(RawDataFacility rdf = gateway.getFacility(RawDataFacility.class)) {
+                    //synchronized (OmeroTools.class) {
+                        int Xcellsize = Xdefaultcellsize;
+                        int Ycellsize = Ydefaultcellsize;
+                        if (sizeX - xOffset < Xdefaultcellsize){
+                            Xcellsize = sizeX - xOffset;
+                        }
+                        if (sizeY - yOffset < Ydefaultcellsize) {
+                            Ycellsize = sizeY - yOffset;
+                        }
+                        Plane2D plane2D = getRawTilefromPixelsData(ctx, rdf, pixels, (int) positions[2], t, c, xOffset, yOffset, Xcellsize, Ycellsize);
+                        pixelIntensities = plane2D.getPixelValues();
+                    //}
                     while (cursor.hasNext()) {
                         // move the cursor forward by one pixel
                         cursor.fwd();
@@ -353,12 +362,16 @@ public class OmeroTools {
                         //get pixel value of the input image (from stack) at pos (px,py) and copy it to the current cell at the same position
                         cursor.get().set((int) pixelIntensities[(int) positions[0] - xOffset][(int) positions[1] - yOffset]);
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
             }
         };
 
         RandomAccessibleInterval<UnsignedShortType> randomAccessible = factory.create(total_dim,type,loader);
         //ask if pixel has already been loaded or not
-        return VolatileViews.wrapAsVolatile(randomAccessible);
+        return randomAccessible;
     }
 
 }

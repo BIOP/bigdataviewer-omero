@@ -1,17 +1,30 @@
 package ch.epfl.biop.ij2command;
 
 import bdv.util.BdvFunctions;
+import bdv.util.BdvOptions;
 import bdv.util.BdvStackSource;
+import bdv.util.volatiles.SharedQueue;
+import bdv.viewer.SourceAndConverter;
+import ch.epfl.biop.bdv.bioformats.bioformatssource.*;
+import ch.epfl.biop.omero.omerosource.OmeroSource;
+import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
+import jdk.jfr.Unsigned;
 import net.imagej.ImageJ;
-import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.converter.Converter;
 import net.imglib2.type.numeric.ARGBType;
+import net.imglib2.type.numeric.NumericType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
-import omero.gateway.facility.RawDataFacility;
-import omero.gateway.model.PixelsData;
+import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
 
@@ -35,30 +48,55 @@ public class RawPixelsfromSource implements Command {
 
     static int port = 4064;
 
+    @Parameter(type = ItemIO.OUTPUT)
+    SourceAndConverter[] sacs;
+
     @Override
     public void run() {
         // https://downloads.openmicroscopy.org/omero/5.4.10/api/omero/gateway/Gateway.html
         try {
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
-            PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway);
-            RawDataFacility rdf = gateway.getFacility(RawDataFacility.class);
             SecurityContext ctx = getSecurityContext(gateway);
+            OmeroSourceOpener opener = new OmeroSourceOpener()
+                    .imageID(imageID)
+                    .gateway(gateway)
+                    .securityContext(ctx)
+                    .millimeter()
+                    .create();
+            SharedQueue cc = new SharedQueue(8,4);
+            //PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
 
             BdvStackSource bss = null;
+            sacs = new SourceAndConverter[opener.getSizeC()];
 
-            //for (int c=0; c<pixels.getSizeC(); c++) {
-            for (int c=0; c<1; c++) {
-            OmeroSource source = new OmeroSource(c,pixels,ctx,rdf);
-            bss = BdvFunctions.show(source);
-            //bss = BdvFunctions.show(source,pixels.getSizeT());
+            for (int c=0; c<opener.getSizeC(); c++) {
+            //for (int c=0; c<1; c++) {
+                OmeroSource concreteSource = new OmeroSource(opener,c);
+                VolatileBdvSource volatileSource = new VolatileBdvSource(concreteSource,
+                        BioFormatsBdvSource.getVolatileOf((NumericType) concreteSource.getType()),
+                        cc);
+                /*bss = BdvFunctions.show(volatileSource);
+                //bss = BdvFunctions.show(source,pixels.getSizeT());
 
-            //add a time slider
-            bss.getBdvHandle().getViewerPanel().setNumTimepoints(pixels.getSizeT());
-            bss.setDisplayRange(0, 500);
-            // Color : Random color for each channel
-            bss.setColor(new ARGBType(ARGBType.rgba(255*Math.random(),255*Math.random(),255*Math.random(),1)));
+                //add a time slider
+                bss.getBdvHandle().getViewerPanel().setNumTimepoints(concreteSource.getSizeT());
+                bss.setDisplayRange(0, 255);
+                // Color : Random color for each channel
+                bss.setColor(new ARGBType(ARGBType.rgba(255*Math.random(),255*Math.random(),255*Math.random(),1)));
+                */
+                Converter concreteConverter = SourceAndConverterHelper.createConverter(concreteSource);
+                Converter volatileConverter = SourceAndConverterHelper.createConverter(volatileSource);
+
+                sacs[c] = new SourceAndConverter(concreteSource,concreteConverter,
+                        new SourceAndConverter<>(volatileSource, volatileConverter));
+
             }
+            List<SourceAndConverter<UnsignedShortType>> list = new ArrayList<>();
+            for (SourceAndConverter sac:sacs){
+                list.add(sac);
+            }
+            BdvFunctions.show(list,opener.getSizeT(),BdvOptions.options());
 
             gateway.disconnect();
 
@@ -83,8 +121,17 @@ public class RawPixelsfromSource implements Command {
         ij.ui().showUI();
 
         //ij.command().run(RawPixelsfromSource.class, true);
+
         //vsi fluo
         ij.command().run(RawPixelsfromSource.class, true, "imageID",3713);
+
+        //lif 4 channels, (1024 1024)
+        //ij.command().run(RawPixelsfromSource.class, true, "imageID",24601);
+
+        //small vsi fluo
+        //ij.command().run(RawPixelsfromSource.class, true, "imageID",14746);
+
+
     }
 
 }

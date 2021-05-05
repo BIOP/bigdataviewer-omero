@@ -108,7 +108,7 @@
 		<license.copyrightOwners>EPFL</license.copyrightOwners>
 		<scijava.app.directory>C:/Fiji_template</scijava.app.directory>
 		<scijava.app.subdirectory>plugins/BIOP</scijava.app.subdirectory>
-		<ice.version>3.6.4</ice.version>
+		<ice.version>3.6.5</ice.version>
 		<glacier2.version>${ice.version}</glacier2.version>
 		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
 		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
@@ -136,11 +136,6 @@
 			<artifactId>junit</artifactId>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
-			<groupId>org.openmicroscopy</groupId>
-			<artifactId>omero-gateway</artifactId>
-			<!--<version>5.6.5</version> -->
-		</dependency>
 
 		<!-- OME dependencies -->
 		<dependency>
@@ -160,10 +155,12 @@
 		<dependency>
 			<groupId>org.openmicroscopy</groupId>
 			<artifactId>omero-blitz</artifactId>
+			<version>5.5.8</version>
 		</dependency>
 		<dependency>
 			<groupId>org.openmicroscopy</groupId>
 			<artifactId>omero-gateway</artifactId>
+			<version>5.6.5</version>
 		</dependency>
 		<dependency>
 			<groupId>org.openmicroscopy</groupId>
@@ -175,6 +172,17 @@
 			<artifactId>bigdataviewer_fiji</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>ch.epfl.biop</groupId>
+			<artifactId>bigdataviewer-bioformats</artifactId>
+			<version>0.2.15</version>
+		</dependency>
+
+		<dependency>
+			<groupId>sc.fiji</groupId>
+			<artifactId>bigdataviewer-playground</artifactId>
+			<version>0.2.13</version>
+		</dependency>
 
 		<!-- dependencies added by nico - test -->
 		<dependency>

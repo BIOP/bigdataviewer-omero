@@ -1,8 +1,9 @@
-package ch.epfl.biop.ij2command;
+package ch.epfl.biop.omero.omerosource;
 
 import bdv.util.DefaultInterpolators;
 import bdv.viewer.Interpolation;
 import bdv.viewer.Source;
+import ch.epfl.biop.ij2command.OmeroTools;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.RealRandomAccessible;
@@ -11,12 +12,20 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.ExtendedRandomAccessibleInterval;
 import net.imglib2.view.Views;
 import ome.model.units.BigResult;
+import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.facility.RawDataFacility;
 import omero.gateway.model.PixelsData;
 import omero.model.enums.UnitsLength;
+
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
+
 
 public class OmeroSource implements Source<UnsignedShortType>{
 
@@ -24,18 +33,26 @@ public class OmeroSource implements Source<UnsignedShortType>{
 
     int sizeT;
     final int channel_index;
-    PixelsData pixels;
-    final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new HashMap<>();
-    final SecurityContext ctx;
-    final RawDataFacility rdf;
+    final long imageID;
+    //final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new HashMap<>();
+    final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new ConcurrentHashMap<>();
+    SecurityContext ctx;
+    final Gateway gt;
+    double pSizeX;
+    double pSizeY;
+    double pSizeZ;
 
-
-    public OmeroSource(int c, PixelsData px, SecurityContext ctx, RawDataFacility rdf) throws Exception {
-        this.sizeT = px.getSizeT();
+    public OmeroSource(OmeroSourceOpener opener, int c) throws Exception {
+        //PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
+        //System.out.println("pixel type " + pixels.getPixelType());
+        this.imageID = opener.omeroImageID;
+        this.gt = opener.gateway;
+        this.ctx = opener.securityContext;
+        this.pSizeX = opener.getPixelSizeX();
+        this.pSizeY = opener.getPixelSizeY();
+        this.pSizeZ = opener.getPixelSizeZ();
+        this.sizeT = opener.getSizeT();
         this.channel_index = c;
-        this.pixels = px;
-        this.rdf = rdf;
-        this.ctx = ctx;
     }
 
     @Override
@@ -44,11 +61,10 @@ public class OmeroSource implements Source<UnsignedShortType>{
     }
 
     @Override
-    public RandomAccessibleInterval<UnsignedShortType> getSource(int t, int level) {
+    synchronized public RandomAccessibleInterval<UnsignedShortType> getSource(int t, int level) {
         if (!map.containsKey(t)){
             try {
-                //map.put(t,OmeroTools.openRawRandomAccessibleInterval(ctx,rdf,pixels,t,channel_index));
-                map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(ctx, rdf, pixels,t,channel_index));
+            map.put(t,OmeroTools.openTiledRawRandomAccessibleInterval(imageID,channel_index,t,ctx,gt));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -68,14 +84,11 @@ public class OmeroSource implements Source<UnsignedShortType>{
 
     @Override
     public void getSourceTransform(int t, int level, AffineTransform3D transform) {
-        try {
-            double pSizeX = pixels.getPixelSizeX(UnitsLength.MILLIMETER).getValue();
-            double pSizeY = pixels.getPixelSizeX(UnitsLength.MILLIMETER).getValue();
-            double pSizeZ = pixels.getPixelSizeX(UnitsLength.MILLIMETER).getValue();
-            transform.scale(pSizeX, pSizeY,pSizeZ);
-        } catch (BigResult bigResult) {
-            bigResult.printStackTrace();
-        }
+        //try {
+        transform.scale(pSizeX, pSizeY,pSizeZ);
+        //} catch (BigResult bigResult) {
+       //     bigResult.printStackTrace();
+        //}
     }
 
     @Override
@@ -97,5 +110,9 @@ public class OmeroSource implements Source<UnsignedShortType>{
     @Override
     public int getNumMipmapLevels() {
         return 1;
+    }
+
+    public int getSizeT(){
+        return sizeT;
     }
 }
