@@ -8,14 +8,19 @@ import bdv.viewer.SourceAndConverter;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.*;
 import ch.epfl.biop.omero.omerosource.OmeroSource;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
+import ch.epfl.biop.omero.omerosource.OmeroSourceUnsignedShort;
 import jdk.jfr.Unsigned;
 import net.imagej.ImageJ;
 import net.imglib2.converter.Converter;
 import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import omero.api.RawPixelsStorePrx;
+import omero.api.ResolutionDescription;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
+import omero.gateway.facility.BrowseFacility;
+import omero.gateway.model.ImageData;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
@@ -58,6 +63,46 @@ public class RawPixelsfromSource implements Command {
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
             SecurityContext ctx = getSecurityContext(gateway);
+
+            // Test pyramidal levels:
+            ImageData img = gateway.getFacility(BrowseFacility.class).getImage(ctx, imageID);
+            RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(ctx);
+            // img.getDefaultPixels() == pixels (PixelsData)
+            rawPixStore.setPixelsId(img.getDefaultPixels().getId(), false);
+            System.out.println("pixel ID : "+img.getDefaultPixels().getId());
+            for (ResolutionDescription desc: rawPixStore.getResolutionDescriptions()) {
+                System.out.println("resolution : "+desc);
+                System.out.println("size X : "+desc.sizeX);
+                System.out.println("size Y : "+desc.sizeY);
+            }
+            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[0].sizeX);
+            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[1].sizeX);
+            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[2].sizeX);
+            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[3].sizeX);
+            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[4].sizeX);
+            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[5].sizeX);
+
+            //for (int i=0;i<6;i++) {
+            int i=5;
+                rawPixStore.setResolutionLevel(i);
+                System.out.println("current level (level) : "+i);
+                System.out.println("current level (getlevel): "+rawPixStore.getResolutionLevel());
+                System.out.println("Tile size: "+rawPixStore.getTileSize()[1]);
+                //263 * 263 is the max supported tile size, at least for this dataset. Why?
+                byte[] tile = rawPixStore.getTile(0, 0, 0, 0, 0, 512, 512);
+                //byte[] tile = rawPixStore.getTile(0, 0, 0, 20, 20, 20, 20);
+                //System.out.println("tile size Y: "+rawPixStore.getTileSize()[1]);
+            //}
+
+            // Display the number of levels
+            System.out.println("number of levels : "+rawPixStore.getResolutionLevels());
+            System.out.println("current level : "+rawPixStore.getResolutionLevel());
+            //byte[] tile = rawPixStore.getTile(0, 0, 0, 0, 0, 100, 100);
+
+            System.out.println("I'm done!");
+            // End test pyramidal levels.
+
+
             OmeroSourceOpener opener = new OmeroSourceOpener()
                     .imageID(imageID)
                     .gateway(gateway)
@@ -72,11 +117,39 @@ public class RawPixelsfromSource implements Command {
 
             for (int c=0; c<opener.getSizeC(); c++) {
             //for (int c=0; c<1; c++) {
-                OmeroSource concreteSource = new OmeroSource(opener,c);
+                OmeroSource concreteSource = new OmeroSourceUnsignedShort(opener,c);
                 VolatileBdvSource volatileSource = new VolatileBdvSource(concreteSource,
                         BioFormatsBdvSource.getVolatileOf((NumericType) concreteSource.getType()),
                         cc);
-                /*bss = BdvFunctions.show(volatileSource);
+
+                Converter concreteConverter = SourceAndConverterHelper.createConverter(concreteSource);
+                Converter volatileConverter = SourceAndConverterHelper.createConverter(volatileSource);
+
+                sacs[c] = new SourceAndConverter(concreteSource,concreteConverter,
+                        new SourceAndConverter<>(volatileSource, volatileConverter));
+
+            }
+            List<SourceAndConverter<UnsignedShortType>> sacsList = new ArrayList<>();
+            for (SourceAndConverter sac:sacs){
+                sacsList.add(sac);
+            }
+            BdvFunctions.show(sacsList,opener.getSizeT(),BdvOptions.options());
+
+            //gateway.disconnect();
+
+            // End of session
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                gateway.disconnect();
+                System.out.println("Gateway disconnected");
+            }));
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /*bss = BdvFunctions.show(volatileSource);
                 //bss = BdvFunctions.show(source,pixels.getSizeT());
 
                 //add a time slider
@@ -85,25 +158,6 @@ public class RawPixelsfromSource implements Command {
                 // Color : Random color for each channel
                 bss.setColor(new ARGBType(ARGBType.rgba(255*Math.random(),255*Math.random(),255*Math.random(),1)));
                 */
-                Converter concreteConverter = SourceAndConverterHelper.createConverter(concreteSource);
-                Converter volatileConverter = SourceAndConverterHelper.createConverter(volatileSource);
-
-                sacs[c] = new SourceAndConverter(concreteSource,concreteConverter,
-                        new SourceAndConverter<>(volatileSource, volatileConverter));
-
-            }
-            List<SourceAndConverter<UnsignedShortType>> list = new ArrayList<>();
-            for (SourceAndConverter sac:sacs){
-                list.add(sac);
-            }
-            BdvFunctions.show(list,opener.getSizeT(),BdvOptions.options());
-
-            gateway.disconnect();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
 
 
