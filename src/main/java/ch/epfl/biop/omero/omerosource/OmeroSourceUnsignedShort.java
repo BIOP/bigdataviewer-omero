@@ -1,18 +1,14 @@
 package ch.epfl.biop.omero.omerosource;
 
 import ch.epfl.biop.ij2command.OmeroTools;
-import loci.formats.IFormatReader;
 import net.imglib2.Cursor;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.cache.img.ReadOnlyCachedCellImgFactory;
 import net.imglib2.cache.img.ReadOnlyCachedCellImgOptions;
 import net.imglib2.img.Img;
-import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.Views;
 import omero.api.RawPixelsStorePrx;
-import omero.gateway.facility.BrowseFacility;
-import omero.gateway.model.ImageData;
 
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -57,31 +53,23 @@ public class OmeroSourceUnsignedShort extends OmeroSource<UnsignedShortType> {
                             //setResolutionLevels indexes are in reverse order compared to the other methods
                             //here index 0 is the lowest resolution and n-1 is the highest
                             rawPixStore.setResolutionLevel(this.opener.getNLevels()-1-level);
-                            //System.out.println("loader current level : "+rawPixStore.getResolutionLevel());
 
                             Cursor<UnsignedShortType> out = Views.flatIterable(cell).cursor();
 
                             //cell connait sa position dans l'espace (dans la grande image)
                             int minX = (int) cell.min(0);
                             int maxX = Math.min(minX + xc, sx);
-                            //System.out.println("sx "+sx);
-                            //System.out.println("minX "+minX);
-                            //System.out.println("maxX "+maxX);
 
                             int minY = (int) cell.min(1);
                             int maxY = Math.min(minY + yc, sy);
-                            //System.out.println("minY "+minY);
-                            //System.out.println("maxY "+maxY);
 
                             int w = maxX - minX;
                             int h = maxY - minY;
 
+                            byte[] bytes = rawPixStore.getTile((int) cell.min(2), channel_index, t, minX, minY, w, h);
+
                             int totBytes = (w * h) * 2;
                             int idxPx = 0;
-
-                            byte[] bytes = rawPixStore.getTile((int) cell.min(2), channel_index, t, minX, minY, w, h);
-                            //byte[] bytes = rawPixStore.getTile(0, 0, 0, minX, minY, w, h);
-                            //byte[] bytes = new byte[w*h*2];
 
                             // TODO change this boolean value?
                             boolean littleEndian = false;
