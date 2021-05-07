@@ -9,6 +9,7 @@ import ch.epfl.biop.bdv.bioformats.bioformatssource.*;
 import ch.epfl.biop.omero.omerosource.OmeroSource;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
 import ch.epfl.biop.omero.omerosource.OmeroSourceUnsignedShort;
+import ij.IJ;
 import jdk.jfr.Unsigned;
 import net.imagej.ImageJ;
 import net.imglib2.converter.Converter;
@@ -25,6 +26,7 @@ import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import sc.fiji.bdvpg.scijava.services.SourceAndConverterBdvDisplayService;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
 
 import java.util.ArrayList;
@@ -55,6 +57,9 @@ public class RawPixelsfromSource implements Command {
 
     @Parameter(type = ItemIO.OUTPUT)
     SourceAndConverter[] sacs;
+
+    @Parameter
+    SourceAndConverterBdvDisplayService displayService;
 
     @Override
     public void run() {
@@ -92,32 +97,23 @@ public class RawPixelsfromSource implements Command {
                     .securityContext(ctx)
                     .millimeter()
                     .create();
-            SharedQueue cc = new SharedQueue(8,4);
+            //SharedQueue cc = new SharedQueue(8,4);
             //PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
 
-            BdvStackSource bss = null;
+            //BdvStackSource bss = null;
             sacs = new SourceAndConverter[opener.getSizeC()];
 
             System.out.println(opener.getSizeC());
             for (int c=0; c<opener.getSizeC(); c++) {
-            //for (int c=0; c<1; c++) {
-                OmeroSource concreteSource = new OmeroSourceUnsignedShort(opener,c);
-                VolatileBdvSource volatileSource = new VolatileBdvSource(concreteSource,
-                        BioFormatsBdvSource.getVolatileOf((NumericType) concreteSource.getType()),
-                        cc);
-
-                Converter concreteConverter = SourceAndConverterHelper.createConverter(concreteSource);
-                Converter volatileConverter = SourceAndConverterHelper.createConverter(volatileSource);
-
-                sacs[c] = new SourceAndConverter(concreteSource,concreteConverter,
-                        new SourceAndConverter<>(volatileSource, volatileConverter));
-
+                sacs[c] = opener.getSourceAndConvertor(c);
             }
-            List<SourceAndConverter<UnsignedShortType>> sacsList = new ArrayList<>();
+            List<SourceAndConverter<?>> sacsList = new ArrayList<>();
             for (SourceAndConverter sac:sacs){
                 sacsList.add(sac);
             }
-            BdvFunctions.show(sacsList,opener.getSizeT(),BdvOptions.options());
+
+            //BdvFunctions.show(sacsList,opener.getSizeT(),BdvOptions.options());
+            //displayService.show(sacs);
 
             //gateway.disconnect();
 
@@ -161,7 +157,10 @@ public class RawPixelsfromSource implements Command {
         //ij.command().run(RawPixelsfromSource.class, true);
 
         //vsi fluo
-        ij.command().run(RawPixelsfromSource.class, true, "imageID",3713);
+        ij.command().run(RawPixelsfromSource.class, true, "imageID",3713).get();
+        ij.command().run(RawPixelsfromSource.class, true, "imageID",24601).get();
+
+        IJ.run("BDV - Show Sources (new Bdv window)", "autocontrast=true adjustviewonsource=true is2d=true windowtitle=BDV interpolate=false ntimepoints=1 projector=[Sum Projector]");
 
         //lif 4 channels, (1024 1024)
         //ij.command().run(RawPixelsfromSource.class, true, "imageID",24601);
