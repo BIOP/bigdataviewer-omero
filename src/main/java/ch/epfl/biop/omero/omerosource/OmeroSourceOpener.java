@@ -2,12 +2,17 @@ package ch.epfl.biop.omero.omerosource;
 
 import IceInternal.Ex;
 import bdv.util.volatiles.SharedQueue;
+import bdv.viewer.SourceAndConverter;
 import ch.epfl.biop.bdv.bioformats.BioFormatsMetaDataHelper;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvOpener;
+import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSource;
+import ch.epfl.biop.bdv.bioformats.bioformatssource.VolatileBdvSource;
 import ch.epfl.biop.ij2command.OmeroTools;
 
 import net.imglib2.FinalInterval;
+import net.imglib2.converter.Converter;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.numeric.NumericType;
 import ome.units.UNITS;
 import ome.units.unit.Unit;
 import omero.api.RawPixelsStorePrx;
@@ -19,9 +24,12 @@ import omero.gateway.model.ImageData;
 import omero.gateway.model.PixelsData;
 import omero.model.Length;
 import omero.model.enums.UnitsLength;
+import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import static omero.gateway.model.PixelsData.*;
 
 /**
  * Contains parameters that explain how to open all channel sources from an Omero Image
@@ -145,21 +153,14 @@ public class OmeroSourceOpener {
         this.nLevels = rawPixStore.getResolutionLevels();
         this.imageSize = new HashMap<>();
         this.tileSize = new HashMap<>();
-        System.out.println("number of levels : "+rawPixStore.getResolutionLevels());
         for (int level = 0; level<this.nLevels; level++){
             int[] sizes = new int[3];
-            System.out.println("level :"+ level);
             sizes[0] = rawPixStore.getResolutionDescriptions()[level].sizeX;
             sizes[1] = rawPixStore.getResolutionDescriptions()[level].sizeY;
-            System.out.println("Sizes XYZ :"+ sizes[0]);
             sizes[2] = pixels.getSizeZ();
             int[] tileSizes = new int[2];
-            //rawPixStore.setResolutionLevel(level);
             tileSizes[0] = Math.min(rawPixStore.getTileSize()[0],rawPixStore.getResolutionDescriptions()[rawPixStore.getResolutionLevels()-1].sizeX);
             tileSizes[1] = Math.min(rawPixStore.getTileSize()[1],rawPixStore.getResolutionDescriptions()[rawPixStore.getResolutionLevels()-1].sizeY);
-            //tileSizes[0] = 50;
-            //tileSizes[1] = 50;
-            System.out.println("Tile sizes XYZ "+ tileSizes[0]);
             imageSize.put(level,sizes);
             tileSize.put(level,tileSizes);
         }
@@ -225,5 +226,36 @@ public class OmeroSourceOpener {
         return this;
     }
 
+    //TODO: move getPixelsDataFromOmeroID to OmeroSource opener (as static)
+    public OmeroSource<?> createOmeroSource(int channel) throws Exception {
+        PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(omeroImageID, gateway, securityContext);
+        OmeroSource source;
+        switch(pixels.getPixelType()){
+            case FLOAT_TYPE: source = new OmeroSourceFloat(this, channel);
+                break;
+            case UINT16_TYPE: source = new OmeroSourceUnsignedShort(this, channel);
+                break;
+            case UINT8_TYPE: source = new OmeroSourceUnsignedByte(this, channel);
+                break;
+            case UINT32_TYPE: source = new OmeroSourceUnsignedInt(this, channel);
+                break;
+            default:
+                throw new IllegalStateException("Unsupported pixel type : " + pixels.getPixelType());
+        }
+        return source;
+    }
 
+    public SourceAndConverter getSourceAndConvertor(int c) throws Exception {
+        OmeroSource concreteSource = createOmeroSource(c);
+        VolatileBdvSource volatileSource = new VolatileBdvSource(concreteSource,
+                BioFormatsBdvSource.getVolatileOf(concreteSource.getType()),
+                cc);
+
+        Converter concreteConverter = SourceAndConverterHelper.createConverter(concreteSource);
+        Converter volatileConverter = SourceAndConverterHelper.createConverter(volatileSource);
+
+        return new SourceAndConverter(concreteSource,concreteConverter,
+                new SourceAndConverter<>(volatileSource, volatileConverter));
+
+    }
 }
