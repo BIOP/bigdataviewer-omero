@@ -1,36 +1,23 @@
 package ch.epfl.biop.ij2command;
 
-import bdv.util.BdvFunctions;
-import bdv.util.BdvOptions;
-import bdv.util.BdvStackSource;
-import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.SourceAndConverter;
-import ch.epfl.biop.bdv.bioformats.bioformatssource.*;
-import ch.epfl.biop.omero.omerosource.OmeroSource;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
-import ch.epfl.biop.omero.omerosource.OmeroSourceUnsignedShort;
-import ij.IJ;
-import jdk.jfr.Unsigned;
 import net.imagej.ImageJ;
-import net.imglib2.converter.Converter;
 import net.imglib2.type.numeric.ARGBType;
-import net.imglib2.type.numeric.NumericType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import omero.api.RawPixelsStorePrx;
-import omero.api.ResolutionDescription;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
-import omero.gateway.facility.BrowseFacility;
-import omero.gateway.model.ImageData;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
+import sc.fiji.bdvpg.bdv.navigate.ViewerTransformAdjuster;
 import sc.fiji.bdvpg.scijava.services.SourceAndConverterBdvDisplayService;
-import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
+import sc.fiji.bdvpg.scijava.services.SourceAndConverterService;
+import sc.fiji.bdvpg.services.SourceAndConverterServices;
+import sc.fiji.bdvpg.sourceandconverter.display.BrightnessAutoAdjuster;
+import sc.fiji.bdvpg.sourceandconverter.display.ColorChanger;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
@@ -39,7 +26,6 @@ import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
 //New class for displaying an OMERO image (raw pixels) in 3D in BDV
 @Plugin(type = Command.class, menuPath = "Plugins>BIOP>display raw pixels in 3D")
 public class RawPixelsfromSource implements Command {
-
 
     @Parameter(label = "OMERO host")
     String host;
@@ -59,7 +45,16 @@ public class RawPixelsfromSource implements Command {
     SourceAndConverter[] sacs;
 
     @Parameter
-    SourceAndConverterBdvDisplayService displayService;
+    SourceAndConverterService sacService;
+
+    @Parameter
+    SourceAndConverterBdvDisplayService sacDisplayService;
+
+    @Parameter
+    boolean autocontrast;
+
+    @Parameter
+    boolean show;
 
     @Override
     public void run() {
@@ -69,53 +64,39 @@ public class RawPixelsfromSource implements Command {
             System.out.println( "Session active : "+gateway.isConnected() );
             SecurityContext ctx = getSecurityContext(gateway);
 
-            // Test pyramidal levels:
-            /*
-            ImageData img = gateway.getFacility(BrowseFacility.class).getImage(ctx, imageID);
-            RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(ctx);
-            // img.getDefaultPixels() == pixels (PixelsData)
-            rawPixStore.setPixelsId(img.getDefaultPixels().getId(), false);
-            //System.out.println("pixel ID : "+img.getDefaultPixels().getId());
-            for (ResolutionDescription desc: rawPixStore.getResolutionDescriptions()) {
-                System.out.println("size X : "+desc.sizeX);
-                System.out.println("size Y : "+desc.sizeY);
-            }
-            System.out.println("size true X : " + rawPixStore.getResolutionDescriptions()[0].sizeX);
-
-            int i=5;
-            rawPixStore.setResolutionLevel(i);
-            byte[] tile = rawPixStore.getTile(0, 0, 0, 0, 0, 512, 512);
-            //byte[] tile = rawPixStore.getTile(0, 0, 0, 0, 0, 100, 100);
-            System.out.println("I'm done!");
-            */
-            // End test pyramidal levels.
-
-
             OmeroSourceOpener opener = new OmeroSourceOpener()
                     .imageID(imageID)
                     .gateway(gateway)
                     .securityContext(ctx)
                     .millimeter()
                     .create();
-            //SharedQueue cc = new SharedQueue(8,4);
-            //PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
 
-            //BdvStackSource bss = null;
             sacs = new SourceAndConverter[opener.getSizeC()];
 
-            System.out.println(opener.getSizeC());
             for (int c=0; c<opener.getSizeC(); c++) {
                 sacs[c] = opener.getSourceAndConvertor(c);
             }
+
             List<SourceAndConverter<?>> sacsList = new ArrayList<>();
+
             for (SourceAndConverter sac:sacs){
                 sacsList.add(sac);
+                sacService.register(sac);
             }
 
-            //BdvFunctions.show(sacsList,opener.getSizeT(),BdvOptions.options());
-            //displayService.show(sacs);
+            for (int i=0;i<sacs.length;i++) {
+                new ColorChanger(sacs[i], new ARGBType(ARGBType.rgba(255*(i%8), 255*((i+1)%2), 255*(i%2), 255 ))).run();
+                if (autocontrast) {
+                    new BrightnessAutoAdjuster(sacs[i], 0).run();
+                }
+                if (show) {
+                    SourceAndConverterServices.getSourceAndConverterDisplayService().show(sacDisplayService.getActiveBdv(), sacs);
+                }
+            }
 
-            //gateway.disconnect();
+            if (show) {
+                (new ViewerTransformAdjuster(sacDisplayService.getActiveBdv(), this.sacs[0])).run();
+            }
 
             // End of session
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -123,23 +104,10 @@ public class RawPixelsfromSource implements Command {
                 System.out.println("Gateway disconnected");
             }));
 
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-
-    /*bss = BdvFunctions.show(volatileSource);
-                //bss = BdvFunctions.show(source,pixels.getSizeT());
-
-                //add a time slider
-                bss.getBdvHandle().getViewerPanel().setNumTimepoints(concreteSource.getSizeT());
-                bss.setDisplayRange(0, 255);
-                // Color : Random color for each channel
-                bss.setColor(new ARGBType(ARGBType.rgba(255*Math.random(),255*Math.random(),255*Math.random(),1)));
-                */
-
-
 
     /**
      * This main function serves for development purposes.
@@ -158,9 +126,9 @@ public class RawPixelsfromSource implements Command {
 
         //vsi fluo
         ij.command().run(RawPixelsfromSource.class, true, "imageID",3713).get();
-        ij.command().run(RawPixelsfromSource.class, true, "imageID",24601).get();
+        //ij.command().run(RawPixelsfromSource.class, true, "imageID",24601).get();
 
-        IJ.run("BDV - Show Sources (new Bdv window)", "autocontrast=true adjustviewonsource=true is2d=true windowtitle=BDV interpolate=false ntimepoints=1 projector=[Sum Projector]");
+        //IJ.run("BDV - Show Sources (new Bdv window)", "autocontrast=true adjustviewonsource=true is2d=true windowtitle=BDV interpolate=false ntimepoints=1 projector=[Sum Projector]");
 
         //lif 4 channels, (1024 1024)
         //ij.command().run(RawPixelsfromSource.class, true, "imageID",24601);
