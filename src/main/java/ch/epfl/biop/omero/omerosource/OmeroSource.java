@@ -124,6 +124,7 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
     public void getSourceTransform(int t, int level, AffineTransform3D transform) {
         transform.identity();
         //TODO : improve this to get the exact sizes
+        //System.out.println(pSizeX);
         transform.scale(pSizeX*Math.pow(2,level), pSizeY*Math.pow(2,level),pSizeZ*Math.pow(2,level));
     }
 
@@ -132,7 +133,7 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
 
     @Override
     public String getName() {
-        return "3D display of my OMERO image";
+        return "OMERO ID : "+imageID;
     }
 
     @Override

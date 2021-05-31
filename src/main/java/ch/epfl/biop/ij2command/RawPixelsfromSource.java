@@ -2,6 +2,7 @@ package ch.epfl.biop.ij2command;
 
 import bdv.viewer.SourceAndConverter;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
+import com.google.gson.Gson;
 import net.imagej.ImageJ;
 import net.imglib2.type.numeric.ARGBType;
 import omero.gateway.Gateway;
@@ -24,7 +25,7 @@ import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
 
 
 //New class for displaying an OMERO image (raw pixels) in 3D in BDV
-@Plugin(type = Command.class, menuPath = "Plugins>BIOP>display raw pixels in 3D")
+@Plugin(type = Command.class, menuPath = "Plugins>BIOP>open OMERO multiresolution image in BDV")
 public class RawPixelsfromSource implements Command {
 
     @Parameter(label = "OMERO host")
@@ -71,9 +72,12 @@ public class RawPixelsfromSource implements Command {
                     .millimeter()
                     .create();
 
+            (new Gson()).toJson(opener);
+            System.out.println(new Gson().toJson(opener));
             sacs = new SourceAndConverter[opener.getSizeC()];
 
             for (int c=0; c<opener.getSizeC(); c++) {
+                // create the right source and convertor depending on the image type
                 sacs[c] = opener.getSourceAndConvertor(c);
             }
 
@@ -86,9 +90,11 @@ public class RawPixelsfromSource implements Command {
 
             for (int i=0;i<sacs.length;i++) {
                 new ColorChanger(sacs[i], new ARGBType(ARGBType.rgba(255*(i%8), 255*((i+1)%2), 255*(i%2), 255 ))).run();
+                //handle autocontrast option
                 if (autocontrast) {
                     new BrightnessAutoAdjuster(sacs[i], 0).run();
                 }
+                //handle show option
                 if (show) {
                     SourceAndConverterServices.getSourceAndConverterDisplayService().show(sacDisplayService.getActiveBdv(), sacs);
                 }
@@ -122,20 +128,22 @@ public class RawPixelsfromSource implements Command {
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        //ij.command().run(RawPixelsfromSource.class, true);
+        ij.command().run(RawPixelsfromSource.class, true).get();
 
         //vsi fluo
-        ij.command().run(RawPixelsfromSource.class, true, "imageID",3713).get();
+        //ij.command().run(RawPixelsfromSource.class, true, "imageID",3713).get();
         //ij.command().run(RawPixelsfromSource.class, true, "imageID",24601).get();
 
         //IJ.run("BDV - Show Sources (new Bdv window)", "autocontrast=true adjustviewonsource=true is2d=true windowtitle=BDV interpolate=false ntimepoints=1 projector=[Sum Projector]");
 
         //lif 4 channels, (1024 1024)
-        //ij.command().run(RawPixelsfromSource.class, true, "imageID",24601);
+        //ij.command().run(RawPixelsfromSource.class, true, "imageID",24720);
+        //ij.command().run(RawPixelsfromSource.class, true, "imageID",18024).get();
 
         //small vsi fluo
         //ij.command().run(RawPixelsfromSource.class, true, "imageID",14746);
 
+        //time lapse: 4677
 
     }
 

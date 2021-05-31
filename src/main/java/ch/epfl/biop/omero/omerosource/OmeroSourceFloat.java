@@ -46,61 +46,53 @@ public class OmeroSourceFloat extends OmeroSource<FloatType> {
             // Creates image, with cell Consumer method, which creates the image
             final Img<FloatType> rai = factory.create(new long[]{sx, sy, sz}, new FloatType(),
                     cell -> {
+                        RawPixelsStorePrx rawPixStore = opener.pool.acquire();
 
-                        try {
-                            synchronized (OmeroTools.class) {
-                                RawPixelsStorePrx rawPixStore = gt.getPixelsStore(ctx);
-                                rawPixStore.setPixelsId(this.opener.getPixelsID(), false);
+                        //setResolutionLevels indexes are in reverse order compared to the other methods
+                        //here index 0 is the lowest resolution and n-1 is the highest
+                        rawPixStore.setResolutionLevel(this.opener.getNLevels()-1-level);
 
-                                //setResolutionLevels indexes are in reverse order compared to the other methods
-                                //here index 0 is the lowest resolution and n-1 is the highest
-                                rawPixStore.setResolutionLevel(this.opener.getNLevels()-1-level);
+                        Cursor<FloatType> out = Views.flatIterable(cell).cursor();
 
-                                Cursor<FloatType> out = Views.flatIterable(cell).cursor();
+                        //cell connait sa position dans l'espace (dans la grande image)
+                        int minX = (int) cell.min(0);
+                        int maxX = Math.min(minX + xc, sx);
 
-                                //cell connait sa position dans l'espace (dans la grande image)
-                                int minX = (int) cell.min(0);
-                                int maxX = Math.min(minX + xc, sx);
+                        int minY = (int) cell.min(1);
+                        int maxY = Math.min(minY + yc, sy);
 
-                                int minY = (int) cell.min(1);
-                                int maxY = Math.min(minY + yc, sy);
+                        int w = maxX - minX;
+                        int h = maxY - minY;
 
-                                int w = maxX - minX;
-                                int h = maxY - minY;
+                        byte[] bytes = rawPixStore.getTile((int) cell.min(2), channel_index, t, minX, minY, w, h);
 
-                                byte[] bytes = rawPixStore.getTile((int) cell.min(2), channel_index, t, minX, minY, w, h);
+                        int totBytes = (w * h)*4;
+                        int idxPx = 0;
 
-                                int totBytes = (w * h)*4;
-                                int idxPx = 0;
+                        // TODO change this boolean value?
+                        boolean littleEndian = false;
 
-                                // TODO change this boolean value?
-                                boolean littleEndian = false;
-
-                                byte[] curBytes = new byte[4];
-                                if (littleEndian) { // TODO improve this dirty switch block
-                                    while ((out.hasNext()) && (idxPx < totBytes)) {
-                                        curBytes[0]= bytes[idxPx];
-                                        curBytes[1]= bytes[idxPx+1];
-                                        curBytes[2]= bytes[idxPx+2];
-                                        curBytes[3]= bytes[idxPx+3];
-                                        out.next().set( ByteBuffer.wrap(curBytes).order(ByteOrder.LITTLE_ENDIAN).getFloat());
-                                        idxPx += 4;
-                                    }
-                                } else {
-                                    while ((out.hasNext()) && (idxPx < totBytes)) {
-                                        curBytes[0]= bytes[idxPx];
-                                        curBytes[1]= bytes[idxPx+1];
-                                        curBytes[2]= bytes[idxPx+2];
-                                        curBytes[3]= bytes[idxPx+3];
-                                        out.next().set( ByteBuffer.wrap(curBytes).order(ByteOrder.BIG_ENDIAN).getFloat());
-                                        idxPx += 4;
-                                    }
-                                }
-                                rawPixStore.close();
+                        byte[] curBytes = new byte[4];
+                        if (littleEndian) { // TODO improve this dirty switch block
+                            while ((out.hasNext()) && (idxPx < totBytes)) {
+                                curBytes[0]= bytes[idxPx];
+                                curBytes[1]= bytes[idxPx+1];
+                                curBytes[2]= bytes[idxPx+2];
+                                curBytes[3]= bytes[idxPx+3];
+                                out.next().set( ByteBuffer.wrap(curBytes).order(ByteOrder.LITTLE_ENDIAN).getFloat());
+                                idxPx += 4;
                             }
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                        } else {
+                            while ((out.hasNext()) && (idxPx < totBytes)) {
+                                curBytes[0]= bytes[idxPx];
+                                curBytes[1]= bytes[idxPx+1];
+                                curBytes[2]= bytes[idxPx+2];
+                                curBytes[3]= bytes[idxPx+3];
+                                out.next().set( ByteBuffer.wrap(curBytes).order(ByteOrder.BIG_ENDIAN).getFloat());
+                                idxPx += 4;
+                            }
                         }
+                        opener.pool.recycle(rawPixStore);
                     });
 
             raiMap.get(t).put(level, rai);

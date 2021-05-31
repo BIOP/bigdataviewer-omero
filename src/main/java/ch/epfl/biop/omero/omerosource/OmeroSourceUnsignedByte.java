@@ -44,42 +44,35 @@ public class OmeroSourceUnsignedByte extends OmeroSource<UnsignedByteType> {
             // Creates image, with cell Consumer method, which creates the image
             final Img<UnsignedByteType> rai = factory.create(new long[]{sx, sy, sz}, new UnsignedByteType(),
                     cell -> {
+                        RawPixelsStorePrx rawPixStore = opener.pool.acquire();
 
-                        try {
-                            synchronized (OmeroTools.class) {
-                                RawPixelsStorePrx rawPixStore = gt.getPixelsStore(ctx);
-                                rawPixStore.setPixelsId(this.opener.getPixelsID(), false);
+                        //setResolutionLevels indexes are in reverse order compared to the other methods
+                        //here index 0 is the lowest resolution and n-1 is the highest
+                        rawPixStore.setResolutionLevel(this.opener.getNLevels()-1-level);
 
-                                //setResolutionLevels indexes are in reverse order compared to the other methods
-                                //here index 0 is the lowest resolution and n-1 is the highest
-                                rawPixStore.setResolutionLevel(this.opener.getNLevels()-1-level);
+                        Cursor<UnsignedByteType> out = Views.flatIterable(cell).cursor();
 
-                                Cursor<UnsignedByteType> out = Views.flatIterable(cell).cursor();
+                        //cell connait sa position dans l'espace (dans la grande image)
+                        int minX = (int) cell.min(0);
+                        int maxX = Math.min(minX + xc, sx);
 
-                                //cell connait sa position dans l'espace (dans la grande image)
-                                int minX = (int) cell.min(0);
-                                int maxX = Math.min(minX + xc, sx);
+                        int minY = (int) cell.min(1);
+                        int maxY = Math.min(minY + yc, sy);
 
-                                int minY = (int) cell.min(1);
-                                int maxY = Math.min(minY + yc, sy);
+                        int w = maxX - minX;
+                        int h = maxY - minY;
 
-                                int w = maxX - minX;
-                                int h = maxY - minY;
+                        byte[] bytes = rawPixStore.getTile((int) cell.min(2), channel_index, t, minX, minY, w, h);
 
-                                byte[] bytes = rawPixStore.getTile((int) cell.min(2), channel_index, t, minX, minY, w, h);
+                        int idxPx = 0;
+                        int totBytes = (w * h);
 
-                                int idxPx = 0;
-                                int totBytes = (w * h);
-
-                                while ((out.hasNext()) && (idxPx < totBytes)) {
-                                    out.next().set(bytes[idxPx]);
-                                    idxPx++;
-                                }
-                                rawPixStore.close();
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
+                        while ((out.hasNext()) && (idxPx < totBytes)) {
+                            out.next().set(bytes[idxPx]);
+                            idxPx++;
                         }
+                        //rawPixStore.close();
+                        opener.pool.recycle(rawPixStore);
                     });
 
             raiMap.get(t).put(level, rai);

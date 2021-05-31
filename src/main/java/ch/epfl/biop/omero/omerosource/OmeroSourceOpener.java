@@ -6,19 +6,24 @@ import bdv.viewer.SourceAndConverter;
 import ch.epfl.biop.bdv.bioformats.BioFormatsMetaDataHelper;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvOpener;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSource;
+import ch.epfl.biop.bdv.bioformats.bioformatssource.ReaderPool;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.VolatileBdvSource;
 import ch.epfl.biop.ij2command.OmeroTools;
 
+import loci.formats.*;
+import loci.formats.meta.IMetadata;
 import net.imglib2.FinalInterval;
 import net.imglib2.converter.Converter;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.NumericType;
 import ome.units.UNITS;
 import ome.units.unit.Unit;
+import omero.ServerError;
 import omero.api.RawPixelsStorePrx;
 import omero.api.ResolutionDescription;
 import omero.gateway.SecurityContext;
 import omero.gateway.Gateway;
+import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;
 import omero.gateway.model.ImageData;
 import omero.gateway.model.PixelsData;
@@ -26,6 +31,7 @@ import omero.model.Length;
 import omero.model.enums.UnitsLength;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,6 +62,7 @@ public class OmeroSourceOpener {
     transient SharedQueue cc = new SharedQueue(2, 4);
     transient Gateway gateway;
     transient SecurityContext securityContext;
+    transient RawPixelsStorePool pool = new RawPixelsStorePool(10, true, this::getNewStore);
     //transient int sizeX, sizeY, sizeZ;
     transient int sizeT;
     transient int sizeC;
@@ -226,9 +233,8 @@ public class OmeroSourceOpener {
         return this;
     }
 
-    //TODO: move getPixelsDataFromOmeroID to OmeroSource opener (as static)
     public OmeroSource<?> createOmeroSource(int channel) throws Exception {
-        PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(omeroImageID, gateway, securityContext);
+        PixelsData pixels = getPixelsDataFromOmeroID(omeroImageID, gateway, securityContext);
         OmeroSource source;
         switch(pixels.getPixelType()){
             case FLOAT_TYPE: source = new OmeroSourceFloat(this, channel);
@@ -245,8 +251,19 @@ public class OmeroSourceOpener {
         return source;
     }
 
+    public static PixelsData getPixelsDataFromOmeroID(long imageID, Gateway gateway, SecurityContext ctx) throws Exception{
+
+        BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
+        ImageData image = browse.getImage(ctx, imageID);
+        PixelsData pixels = image.getDefaultPixels();
+        return pixels;
+
+    }
+
     public SourceAndConverter getSourceAndConvertor(int c) throws Exception {
+        // create the right concrete source depending on the image type
         OmeroSource concreteSource = createOmeroSource(c);
+        // create the right volatile source depending on the image type
         VolatileBdvSource volatileSource = new VolatileBdvSource(concreteSource,
                 BioFormatsBdvSource.getVolatileOf(concreteSource.getType()),
                 cc);
@@ -258,4 +275,16 @@ public class OmeroSourceOpener {
                 new SourceAndConverter<>(volatileSource, volatileConverter));
 
     }
+
+    public RawPixelsStorePrx getNewStore() {
+        try {
+            RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(securityContext);
+            rawPixStore.setPixelsId(getPixelsID(), false);
+            return rawPixStore;
+        } catch (ServerError | DSOutOfServiceException serverError) {
+            serverError.printStackTrace();
+        }
+        return null;
+    }
+
 }
