@@ -1,10 +1,9 @@
-This is an example Maven project implementing an ImageJ command with a Pom adapted for PT-BIOP at EPFL.
+This is a proof-of-concept Maven project implementing an ImageJ command that access images from OMERO and displays them in BigDataViewer. 
+It can support:
+ - multiresolution 5D images
+ - lazy loading of raw data
+ - multiple images positioned in 3d space
 
-This project was initially cloned from https://github.com/imagej/example-imagej-command.git (11th October 2018)
+![Animation_low3](https://user-images.githubusercontent.com/70692766/119824183-ebf68a00-bef5-11eb-97ad-68fb14d05ea4.gif)
 
-It is intended as an ideal starting point to develop new ImageJ commands.
-
-Setting up IntelliJ IDEA with this command is detailed here (access restricted to BIOP members):
-
-https://c4science.ch/w/bioimaging_and_optics_platform_biop/image-processing/intellij-idea/
-
+![Animation_3D](https://user-images.githubusercontent.com/70692766/119821234-9b316200-bef2-11eb-811a-5354201886d3.gif)
