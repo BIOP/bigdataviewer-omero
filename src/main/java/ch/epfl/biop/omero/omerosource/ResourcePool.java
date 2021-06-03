@@ -61,10 +61,15 @@ import java.util.concurrent.locks.ReentrantLock;
  * User: dtsai
  * Date: 2/18/13
  * Time: 3:42 PM
+ *
+ * resource pool that hold a fixed amount of objects, and recycle them when
+ * the threads don’t need them anymore.
  */
 
 public abstract class ResourcePool<Resource> {
+    // built concurrent object pool
     private final BlockingQueue<Resource> pool;
+    //use ReentrantLock to control if we can create a new object in the pool
     private final ReentrantLock lock = new ReentrantLock();
     private int createdObjects = 0;
     private int size;

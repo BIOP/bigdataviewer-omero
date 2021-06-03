@@ -44,16 +44,13 @@ public class OmeroSourceUnsignedShort extends OmeroSource<UnsignedShortType> {
             // Creates image, with cell Consumer method, which creates the image
             final Img<UnsignedShortType> rai = factory.create(new long[]{sx, sy, sz}, new UnsignedShortType(),
                 cell -> {
+                    // get a rawPixelsStore from the rawPixelsStorePool to avoid creating a new instance of rawPixelsStore in each thread.
                     RawPixelsStorePrx rawPixStore = opener.pool.acquire();
-                    //RawPixelsStorePrx rawPixStore = gt.getPixelsStore(ctx);
-                    //rawPixStore.setPixelsId(this.opener.getPixelsID(), false);
 
-                    //setResolutionLevels indexes are in reverse order compared to the other methods
-                    //here index 0 is the lowest resolution and n-1 is the highest
+                    //setResolutionLevels indexes are in reverse order compared to the other methods: here index 0 is the lowest resolution and n-1 is the highest
                     rawPixStore.setResolutionLevel(this.opener.getNLevels()-1-level);
 
                     Cursor<UnsignedShortType> out = Views.flatIterable(cell).cursor();
-
                     //cell connait sa position dans l'espace (dans la grande image)
                     int minX = (int) cell.min(0);
                     int maxX = Math.min(minX + xc, sx);
@@ -84,7 +81,7 @@ public class OmeroSourceUnsignedShort extends OmeroSource<UnsignedShortType> {
                             idxPx += 2;
                         }
                     }
-                    //rawPixStore.close();
+                    //recycle the rawPixelsStore so that it can be used by another thread.
                     opener.pool.recycle(rawPixStore);
 
                 });

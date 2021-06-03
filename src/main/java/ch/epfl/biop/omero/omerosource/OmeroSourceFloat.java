@@ -46,6 +46,7 @@ public class OmeroSourceFloat extends OmeroSource<FloatType> {
             // Creates image, with cell Consumer method, which creates the image
             final Img<FloatType> rai = factory.create(new long[]{sx, sy, sz}, new FloatType(),
                     cell -> {
+                        // get a rawPixelsStore from the rawPixelsStorePool to avoid creating a new instance of rawPixelsStore in each thread.
                         RawPixelsStorePrx rawPixStore = opener.pool.acquire();
 
                         //setResolutionLevels indexes are in reverse order compared to the other methods
@@ -92,6 +93,7 @@ public class OmeroSourceFloat extends OmeroSource<FloatType> {
                                 idxPx += 4;
                             }
                         }
+                        //recycle the rawPixelsStore so that it can be used by another thread.
                         opener.pool.recycle(rawPixStore);
                     });
 

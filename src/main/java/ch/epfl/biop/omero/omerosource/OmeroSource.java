@@ -17,6 +17,7 @@ import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.ExtendedRandomAccessibleInterval;
 import net.imglib2.view.Views;
 import ome.model.units.BigResult;
+import omero.api.IMetadataPrx;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.facility.RawDataFacility;
@@ -50,11 +51,14 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
     double pSizeZ;
     OmeroSourceOpener opener;
 
+
+
     public OmeroSource(OmeroSourceOpener opener, int c) throws Exception {
         //PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
         //System.out.println("pixel type " + pixels.getPixelType());
         this.imageID = opener.omeroImageID;
         this.gt = opener.gateway;
+
         this.ctx = opener.securityContext;
         this.pSizeX = opener.getPixelSizeX();
         this.pSizeY = opener.getPixelSizeY();

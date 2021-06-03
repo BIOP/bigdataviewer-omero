@@ -63,7 +63,6 @@ public class OmeroSourceOpener {
     transient Gateway gateway;
     transient SecurityContext securityContext;
     transient RawPixelsStorePool pool = new RawPixelsStorePool(10, true, this::getNewStore);
-    //transient int sizeX, sizeY, sizeZ;
     transient int sizeT;
     transient int sizeC;
     transient int nLevels;
@@ -276,6 +275,9 @@ public class OmeroSourceOpener {
 
     }
 
+    /**
+     * RawPixelStore supplier method for the RawPixelsStorePool.
+     */
     public RawPixelsStorePrx getNewStore() {
         try {
             RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(securityContext);

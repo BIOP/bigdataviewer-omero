@@ -44,6 +44,7 @@ public class OmeroSourceUnsignedByte extends OmeroSource<UnsignedByteType> {
             // Creates image, with cell Consumer method, which creates the image
             final Img<UnsignedByteType> rai = factory.create(new long[]{sx, sy, sz}, new UnsignedByteType(),
                     cell -> {
+                        // get a rawPixelsStore from the rawPixelsStorePool to avoid creating a new instance of rawPixelsStore in each thread.
                         RawPixelsStorePrx rawPixStore = opener.pool.acquire();
 
                         //setResolutionLevels indexes are in reverse order compared to the other methods
@@ -71,7 +72,7 @@ public class OmeroSourceUnsignedByte extends OmeroSource<UnsignedByteType> {
                             out.next().set(bytes[idxPx]);
                             idxPx++;
                         }
-                        //rawPixStore.close();
+                        //recycle the rawPixelsStore so that it can be used by another thread.
                         opener.pool.recycle(rawPixStore);
                     });
 
