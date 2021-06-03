@@ -123,9 +123,9 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
     @Override
     public void getSourceTransform(int t, int level, AffineTransform3D transform) {
         transform.identity();
-        //TODO : improve this to get the exact sizes
-        //System.out.println(pSizeX);
-        transform.scale(pSizeX*Math.pow(2,level), pSizeY*Math.pow(2,level),pSizeZ*Math.pow(2,level));
+        transform.scale(pSizeX*(double)opener.imageSize.get(0)[0]/(double)opener.imageSize.get(level)[0],
+                pSizeY*(double)opener.imageSize.get(0)[1]/(double)opener.imageSize.get(level)[1],
+                pSizeZ*(double)opener.imageSize.get(0)[2]/(double)opener.imageSize.get(level)[2]);
     }
 
     @Override
