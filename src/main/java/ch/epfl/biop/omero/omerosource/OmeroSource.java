@@ -41,8 +41,8 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
     int nLevels;
     final int channel_index;
     final long imageID;
-    //final Map<Integer,RandomAccessibleInterval<UnsignedShortType>> map = new HashMap<>();
     //Concurrent hash map allows different threads to work at the same time
+    //raiMap: 1st key: time point // 2nd key: resolution level
     final Map<Integer,Map<Integer,RandomAccessibleInterval<T>>> raiMap = new ConcurrentHashMap<>();
     SecurityContext ctx;
     final Gateway gt;
@@ -52,10 +52,7 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
     OmeroSourceOpener opener;
 
 
-
-    public OmeroSource(OmeroSourceOpener opener, int c) throws Exception {
-        //PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID,gateway,ctx);
-        //System.out.println("pixel type " + pixels.getPixelType());
+    public OmeroSource(OmeroSourceOpener opener, int c){
         this.imageID = opener.omeroImageID;
         this.gt = opener.gateway;
 
@@ -106,6 +103,7 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
      */
     @Override
     public RandomAccessibleInterval<T> getSource(int t, int level) {
+        //TODO: check if synchronized is required
         if (raiMap.containsKey(t)) {
             if (raiMap.get(t).containsKey(level)) {
                 return raiMap.get(t).get(level);
@@ -137,20 +135,37 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
 
     @Override
     public String getName() {
-        return "OMERO ID : "+imageID;
+        return "OMERO ID: "+imageID+ "; Channel: "+ channel_index;
     }
 
     @Override
-    public VoxelDimensions getVoxelDimensions() {
-        return null;
+    public VoxelDimensions getVoxelDimensions() { return new VoxelDimensions() {
+        @Override
+        public String unit() {
+            return "pixel";
+        }
+
+        @Override
+        public void dimensions(double[] doubles) {
+            doubles[0] = 1;
+            doubles[1] = 1;
+            doubles[2] = 1;
+        }
+
+        @Override
+        public double dimension(int i) {
+            return 1;
+        }
+
+        @Override
+        public int numDimensions() {
+            return 3;
+        }
+    };
     }
 
     @Override
     public int getNumMipmapLevels() {
         return nLevels;
-    }
-
-    public int getSizeT(){
-        return sizeT;
     }
 }

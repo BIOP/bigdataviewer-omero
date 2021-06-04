@@ -23,8 +23,11 @@ import java.util.List;
 
 import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
 
-
-//New class for displaying an OMERO image (raw pixels) in 3D in BDV
+/**
+ * Command for displaying an OMERO image (raw pixels) in 3D in BDV
+ *
+ * @parameters ("annotation") : ImageJ input parameters declaration
+ */
 @Plugin(type = Command.class, menuPath = "Plugins>BIOP>open OMERO multiresolution image in BDV")
 public class RawPixelsfromSource implements Command {
 
@@ -40,31 +43,42 @@ public class RawPixelsfromSource implements Command {
     @Parameter(label = "Enter the ID of your OMERO image")
     long imageID;
 
-    static int port = 4064;
-
-    @Parameter(type = ItemIO.OUTPUT)
-    SourceAndConverter[] sacs;
-
-    @Parameter
-    SourceAndConverterService sacService;
-
-    @Parameter
-    SourceAndConverterBdvDisplayService sacDisplayService;
-
     @Parameter
     boolean autocontrast;
 
     @Parameter
     boolean show;
 
+    static int port = 4064;
+
+    /**
+     * Command Output
+     */
+    @Parameter(type = ItemIO.OUTPUT)
+    SourceAndConverter[] sacs;
+
+    /**
+     * BDV Service for managing all BDV Sources
+     * https://github.com/bigdataviewer/bigdataviewer-playground
+     */
+    @Parameter
+    SourceAndConverterService sacService;
+
+    /**
+     * BDV Service for display
+     * https://github.com/bigdataviewer/bigdataviewer-playground
+     */
+    @Parameter
+    SourceAndConverterBdvDisplayService sacDisplayService;
+
     @Override
     public void run() {
-        // https://downloads.openmicroscopy.org/omero/5.4.10/api/omero/gateway/Gateway.html
         try {
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
             SecurityContext ctx = getSecurityContext(gateway);
 
+            //create a new opener and modify it
             OmeroSourceOpener opener = new OmeroSourceOpener()
                     .imageID(imageID)
                     .gateway(gateway)
@@ -72,8 +86,10 @@ public class RawPixelsfromSource implements Command {
                     .millimeter()
                     .create();
 
-            (new Gson()).toJson(opener);
-            System.out.println(new Gson().toJson(opener));
+            //(new Gson()).toJson(opener);
+            //System.out.println(new Gson().toJson(opener));
+
+            //
             sacs = new SourceAndConverter[opener.getSizeC()];
 
             for (int c=0; c<opener.getSizeC(); c++) {
@@ -81,10 +97,8 @@ public class RawPixelsfromSource implements Command {
                 sacs[c] = opener.getSourceAndConvertor(c);
             }
 
-            List<SourceAndConverter<?>> sacsList = new ArrayList<>();
-
+            // give the sources to the sacService (BDV source manager)
             for (SourceAndConverter sac:sacs){
-                sacsList.add(sac);
                 sacService.register(sac);
             }
 
@@ -94,18 +108,19 @@ public class RawPixelsfromSource implements Command {
                 if (autocontrast) {
                     new BrightnessAutoAdjuster(sacs[i], 0).run();
                 }
-                //handle show option
-                if (show) {
-                    SourceAndConverterServices.getSourceAndConverterDisplayService().show(sacDisplayService.getActiveBdv(), sacs);
-                }
             }
 
+            //handle show option
             if (show) {
+                SourceAndConverterServices.getBdvDisplayService().show(sacDisplayService.getActiveBdv(), sacs);
+                //adjust the viewing window in BDV to the image
                 (new ViewerTransformAdjuster(sacDisplayService.getActiveBdv(), this.sacs[0])).run();
             }
 
             // End of session
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                //fail
+                System.out.println( "Session active : "+gateway.isConnected() );
                 gateway.disconnect();
                 System.out.println("Gateway disconnected");
             }));

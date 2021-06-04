@@ -16,36 +16,44 @@ import net.imglib2.FinalInterval;
 import net.imglib2.converter.Converter;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.NumericType;
+import ome.formats.model.ChannelData;
+import ome.formats.model.IObjectContainerStore;
 import ome.units.UNITS;
 import ome.units.unit.Unit;
 import omero.ServerError;
+import omero.api.IMetadataPrx;
 import omero.api.RawPixelsStorePrx;
 import omero.api.ResolutionDescription;
 import omero.gateway.SecurityContext;
 import omero.gateway.Gateway;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;
+import omero.gateway.facility.MetadataFacility;
 import omero.gateway.model.ImageData;
 import omero.gateway.model.PixelsData;
 import omero.model.Length;
+import omero.model.LogicalChannel;
 import omero.model.enums.UnitsLength;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static omero.gateway.model.PixelsData.*;
 
 /**
  * Contains parameters that explain how to open all channel sources from an Omero Image
+ * TODO: make proper builder pattern (2 classes: internal builder class in omerosourceopener)
  */
 public class OmeroSourceOpener {
 
     public OmeroSourceOpener() {
     }
 
-    // All serializable fields
+    // All serializable fields (fields needed to create the omeroSourceOpener)
     long omeroImageID;
     // Channels options
     boolean splitRGBChannels = false;
@@ -151,7 +159,15 @@ public class OmeroSourceOpener {
     }
 
     // define size fields based on omero image ID, gateway and security context
+
+    /**
+     * Builder pattern: fills all the omerosourceopener fields that relates to the image to open
+     * (i.e image size for all resolution levels..)
+     * @return
+     * @throws Exception
+     */
     public OmeroSourceOpener create() throws Exception {
+        //TODO move it to omerosourceopener
         PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(omeroImageID, gateway, securityContext);
         RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(securityContext);
         this.pixelsID = pixels.getId();
@@ -173,6 +189,7 @@ public class OmeroSourceOpener {
         this.sizeT = pixels.getSizeT();
         this.sizeC = pixels.getSizeC();
 
+        //psizes are expressed in the unit given in the builder
         this.psizeX = pixels.getPixelSizeX(this.u).getValue();
         this.psizeY = pixels.getPixelSizeY(this.u).getValue();
         //to handle 2D images
@@ -181,6 +198,17 @@ public class OmeroSourceOpener {
         if(length != null){
             this.psizeZ = length.getValue();
         }
+
+        /*
+        MetadataFacility metadata = gateway.getFacility(MetadataFacility.class);
+        List<omero.gateway.model.ChannelData> machin2 = metadata.getChannelData(securityContext, omeroImageID);
+        System.out.println(u);
+        System.out.println(metadata.getImageAcquisitionData(securityContext, omeroImageID).getPositionX(u));
+        System.out.println(metadata.getImageAcquisitionData(securityContext, omeroImageID).getPositionY(u));
+        System.out.println(machin2.get(0).getEmissionWavelength(u));
+        metadata.getImageAcquisitionData(securityContext, omeroImageID);
+        */
+
         // must close the rawPixStore to free up resources
         rawPixStore.close();
         return this;
@@ -235,6 +263,7 @@ public class OmeroSourceOpener {
     public OmeroSource<?> createOmeroSource(int channel) throws Exception {
         PixelsData pixels = getPixelsDataFromOmeroID(omeroImageID, gateway, securityContext);
         OmeroSource source;
+        //TODO : get pixel type as a field in omerosourceopener
         switch(pixels.getPixelType()){
             case FLOAT_TYPE: source = new OmeroSourceFloat(this, channel);
                 break;
@@ -262,7 +291,7 @@ public class OmeroSourceOpener {
     public SourceAndConverter getSourceAndConvertor(int c) throws Exception {
         // create the right concrete source depending on the image type
         OmeroSource concreteSource = createOmeroSource(c);
-        // create the right volatile source depending on the image type
+        // create the volatile source based on the concrete source
         VolatileBdvSource volatileSource = new VolatileBdvSource(concreteSource,
                 BioFormatsBdvSource.getVolatileOf(concreteSource.getType()),
                 cc);

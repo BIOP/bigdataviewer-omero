@@ -21,6 +21,7 @@ public class OmeroSourceUnsignedShort extends OmeroSource<UnsignedShortType> {
     public RandomAccessibleInterval<UnsignedShortType> createSource(int t, int level) {
 
         try {
+            //TODO: check if synchronized is required here
             if (!raiMap.containsKey(t)) {
                 raiMap.put(t, new ConcurrentHashMap<>());
             }
@@ -28,11 +29,12 @@ public class OmeroSourceUnsignedShort extends OmeroSource<UnsignedShortType> {
             // Create cached image factory of Type Byte
             ReadOnlyCachedCellImgOptions options = new ReadOnlyCachedCellImgOptions();
 
+            // Image sizes (number of pixels) at the current resolution level
             int sx = this.opener.getSizeX(level);
             int sy = this.opener.getSizeY(level);
             int sz = this.opener.getSizeZ(level);
 
-            // Set cell dimensions according to level
+            // Set cell dimensions according to resolution level
             int xc = this.opener.getTileSizeX(level);
             int yc = this.opener.getTileSizeY(level);
             int zc = 1;
