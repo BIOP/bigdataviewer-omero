@@ -7,6 +7,9 @@ import net.imagej.ImageJ;
 import net.imglib2.type.numeric.ARGBType;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
+import omero.gateway.facility.MetadataFacility;
+import omero.model.Length;
+import omero.model.enums.UnitsLength;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
 import org.scijava.plugin.Parameter;
@@ -22,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
+import static ch.epfl.biop.utils.MetadataUtils.getRGBFromWavelength;
 
 /**
  * Command for displaying an OMERO image (raw pixels) in 3D in BDV
@@ -102,8 +106,13 @@ public class RawPixelsfromSource implements Command {
                 sacService.register(sac);
             }
 
+            MetadataFacility metadata = gateway.getFacility(MetadataFacility.class);
+            List<omero.gateway.model.ChannelData> channelMetadata = metadata.getChannelData(ctx, imageID);
+
+
             for (int i=0;i<sacs.length;i++) {
-                new ColorChanger(sacs[i], new ARGBType(ARGBType.rgba(255*(i%8), 255*((i+1)%2), 255*(i%2), 255 ))).run();
+                int wv = (int)channelMetadata.get(i).getEmissionWavelength(UnitsLength.NANOMETER).getValue();
+                new ColorChanger(sacs[i], getRGBFromWavelength(wv)).run();
                 //handle autocontrast option
                 if (autocontrast) {
                     new BrightnessAutoAdjuster(sacs[i], 0).run();

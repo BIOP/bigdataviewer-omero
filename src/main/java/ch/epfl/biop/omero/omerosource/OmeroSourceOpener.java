@@ -199,16 +199,6 @@ public class OmeroSourceOpener {
             this.psizeZ = length.getValue();
         }
 
-        /*
-        MetadataFacility metadata = gateway.getFacility(MetadataFacility.class);
-        List<omero.gateway.model.ChannelData> machin2 = metadata.getChannelData(securityContext, omeroImageID);
-        System.out.println(u);
-        System.out.println(metadata.getImageAcquisitionData(securityContext, omeroImageID).getPositionX(u));
-        System.out.println(metadata.getImageAcquisitionData(securityContext, omeroImageID).getPositionY(u));
-        System.out.println(machin2.get(0).getEmissionWavelength(u));
-        metadata.getImageAcquisitionData(securityContext, omeroImageID);
-        */
-
         // must close the rawPixStore to free up resources
         rawPixStore.close();
         return this;
