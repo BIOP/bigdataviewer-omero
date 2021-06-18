@@ -2,6 +2,7 @@ package ch.epfl.biop.omero.omerosource;
 
 import IceInternal.Ex;
 import bdv.util.volatiles.SharedQueue;
+import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
 import ch.epfl.biop.bdv.bioformats.BioFormatsMetaDataHelper;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvOpener;
@@ -283,8 +284,7 @@ public class OmeroSourceOpener {
         OmeroSource concreteSource = createOmeroSource(c);
         // create the volatile source based on the concrete source
         VolatileBdvSource volatileSource = new VolatileBdvSource(concreteSource,
-                BioFormatsBdvSource.getVolatileOf(concreteSource.getType()),
-                cc);
+                BioFormatsBdvSource.getVolatileOf((NumericType) concreteSource.getType()),cc);
 
         Converter concreteConverter = SourceAndConverterHelper.createConverter(concreteSource);
         Converter volatileConverter = SourceAndConverterHelper.createConverter(volatileSource);
@@ -293,6 +293,21 @@ public class OmeroSourceOpener {
                 new SourceAndConverter<>(volatileSource, volatileConverter));
 
     }
+
+    public List<Source> getConcreteAndVolatileSources(int c) throws Exception{
+        // create the right concrete source depending on the image type
+        OmeroSource concreteSource = createOmeroSource(c);
+        // create the volatile source based on the concrete source
+        VolatileBdvSource volatileSource = new VolatileBdvSource(concreteSource,
+                BioFormatsBdvSource.getVolatileOf((NumericType) concreteSource.getType()),cc);
+
+        List<Source> sources = new ArrayList<>(2);
+        sources.add(concreteSource);
+        sources.add(volatileSource);
+        return sources;
+
+    }
+
 
     /**
      * RawPixelStore supplier method for the RawPixelsStorePool.
@@ -307,5 +322,6 @@ public class OmeroSourceOpener {
         }
         return null;
     }
+
 
 }
