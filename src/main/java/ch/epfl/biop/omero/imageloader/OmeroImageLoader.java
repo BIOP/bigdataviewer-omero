@@ -1,20 +1,25 @@
 package ch.epfl.biop.omero.imageloader;
 
 import bdv.ViewerImgLoader;
-import bdv.ViewerSetupImgLoader;
 import bdv.cache.CacheControl;
-import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvOpener;
-import ch.epfl.biop.bdv.bioformats.imageloader.BioFormatsSetupLoader;
+import bdv.img.cache.VolatileGlobalCellCache;
+import bdv.util.volatiles.SharedQueue;
 import ch.epfl.biop.bdv.bioformats.imageloader.FileSerieChannel;
+import ch.epfl.biop.omero.omerosource.OmeroSource;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
+import loci.formats.IFormatReader;
+import loci.formats.meta.IMetadata;
+import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import net.imglib2.Volatile;
+import net.imglib2.type.Type;
 import net.imglib2.type.numeric.NumericType;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
 public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoader {
 
@@ -26,11 +31,33 @@ public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoad
 
     Map<Integer, Volatile> vTypeGetter = new HashMap<>();
 
+    final AbstractSequenceDescription<?, ?, ?> sequenceDescription;
 
     HashMap<Integer, OmeroSetupLoader> imgLoaders = new HashMap<>();
 
     public Consumer<String> log = s -> {};//System.out.println(s);
 
+    protected VolatileGlobalCellCache cache;
+
+    protected SharedQueue cc;
+
+
+    public final int numFetcherThreads;
+    public final int numPriorities;
+
+    public OmeroImageLoader(List<OmeroSourceOpener> openers, final AbstractSequenceDescription<?, ?, ?> sequenceDescription, int numFetcherThreads, int numPriorities) {
+        this.openers = openers;
+        this.sequenceDescription = sequenceDescription;
+        this.numFetcherThreads=numFetcherThreads;
+        this.numPriorities=numPriorities;
+        cc = new SharedQueue(numFetcherThreads,numPriorities);
+
+        openers.forEach(opener -> opener.setCache(cc));
+
+        // NOT CORRECTLY IMPLEMENTED YET
+        //final BlockingFetchQueues<Callable<?>> queue = new BlockingFetchQueues<>(1,1);
+        cache = new VolatileGlobalCellCache(cc);
+    }
 
 
     @Override
@@ -61,6 +88,6 @@ public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoad
 
     @Override
     public CacheControl getCacheControl() {
-        return null;
+        return cache;
     }
 }

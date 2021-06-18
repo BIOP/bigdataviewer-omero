@@ -2,10 +2,8 @@ package ch.epfl.biop.omero.imageloader;
 
 import bdv.AbstractViewerSetupImgLoader;
 import bdv.viewer.Source;
-import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvOpener;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSource;
 import ch.epfl.biop.bdv.bioformats.imageloader.BioFormatsSetupLoader;
-import ch.epfl.biop.omero.omerosource.OmeroSource;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import mpicbg.spim.data.sequence.MultiResolutionSetupImgLoader;
@@ -22,7 +20,6 @@ import net.imglib2.type.numeric.integer.AbstractIntegerType;
 import net.imglib2.type.numeric.real.FloatType;
 
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 

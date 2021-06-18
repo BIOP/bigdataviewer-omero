@@ -324,4 +324,9 @@ public class OmeroSourceOpener {
     }
 
 
+    public OmeroSourceOpener setCache(SharedQueue cc) {
+        this.cc = cc;
+        return this;
+    }
+
 }
