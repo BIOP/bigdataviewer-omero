@@ -8,6 +8,8 @@ import net.imglib2.type.numeric.ARGBType;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.facility.MetadataFacility;
+import omero.gateway.model.ChannelData;
+import omero.gateway.model.ImageAcquisitionData;
 import omero.model.Length;
 import omero.model.enums.UnitsLength;
 import org.scijava.ItemIO;
@@ -107,12 +109,19 @@ public class RawPixelsfromSource implements Command {
             }
 
             MetadataFacility metadata = gateway.getFacility(MetadataFacility.class);
-            List<omero.gateway.model.ChannelData> channelMetadata = metadata.getChannelData(ctx, imageID);
-
+            List<ChannelData> channelMetadata = metadata.getChannelData(ctx, imageID);
 
             for (int i=0;i<sacs.length;i++) {
-                int wv = (int)channelMetadata.get(i).getEmissionWavelength(UnitsLength.NANOMETER).getValue();
-                new ColorChanger(sacs[i], getRGBFromWavelength(wv)).run();
+                Length wv = channelMetadata.get(i).getEmissionWavelength(UnitsLength.NANOMETER);
+                //Length wv = channelMetadata.get(i).getExcitationWavelength(UnitsLength.NANOMETER);
+
+                //If EmissionWavelength is contained in the image metadata, convert it to RGB colors for the different channels
+                //Otherwise, put arbitrary colors
+                if (wv != null){
+                    new ColorChanger(sacs[i], getRGBFromWavelength((int)wv.getValue())).run();
+                } else {
+                    new ColorChanger(sacs[i], new ARGBType(ARGBType.rgba(255*(i%8), 255*((i+1)%2), 255*(i%2), 255 ))).run();
+                }
                 //handle autocontrast option
                 if (autocontrast) {
                     new BrightnessAutoAdjuster(sacs[i], 0).run();
@@ -125,6 +134,17 @@ public class RawPixelsfromSource implements Command {
                 //adjust the viewing window in BDV to the image
                 (new ViewerTransformAdjuster(sacDisplayService.getActiveBdv(), this.sacs[0])).run();
             }
+
+
+            ImageAcquisitionData acquisitionData = metadata.getImageAcquisitionData(ctx,imageID);
+            Length x = acquisitionData.getPositionX(omero.model.enums.UnitsLength.MICROMETER);
+            if (x != null)
+                System.out.println("x="+x);
+            Length y = acquisitionData.getPositionX(omero.model.enums.UnitsLength.MICROMETER);
+            if (y != null)
+                System.out.println("y="+y);
+
+
 
             // End of session
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
