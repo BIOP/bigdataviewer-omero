@@ -2,15 +2,20 @@ package ch.epfl.biop.ij2command;
 
 import bdv.viewer.SourceAndConverter;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
-import com.google.gson.Gson;
 import net.imagej.ImageJ;
 import net.imglib2.type.numeric.ARGBType;
+import omero.RType;
+import omero.cmd.CmdCallbackI;
+import omero.cmd.OriginalMetadataRequest;
+import omero.cmd.OriginalMetadataResponse;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.facility.MetadataFacility;
 import omero.gateway.model.ChannelData;
 import omero.gateway.model.ImageAcquisitionData;
+import omero.gateway.model.PixelsData;
 import omero.model.Length;
+import omero.model.PlaneInfo;
 import omero.model.enums.UnitsLength;
 import org.scijava.ItemIO;
 import org.scijava.command.Command;
@@ -25,6 +30,7 @@ import sc.fiji.bdvpg.sourceandconverter.display.ColorChanger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
 import static ch.epfl.biop.utils.MetadataUtils.getRGBFromWavelength;
@@ -144,6 +150,31 @@ public class RawPixelsfromSource implements Command {
             if (y != null)
                 System.out.println("y="+y);
 
+            /*String field = "Image|ATLConfocalSettingDefinition|StagePosX";
+            OriginalMetadataRequest omr = new OriginalMetadataRequest(imageID);
+            CmdCallbackI cmd = gateway.submit(ctx, omr);
+            OriginalMetadataResponse rsp = (OriginalMetadataResponse) cmd.loop(5, 500);
+
+            Map<String, omero.RType> gm = rsp.seriesMetadata;
+            String posx = gm.get(field).toString();
+            omero.RType type = gm.get(field);
+
+            System.out.println("pos x ="+type.ice_id());*/
+
+            PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(imageID, gateway, ctx);
+
+            List<omero.model.IObject> objectinfos = gateway.getQueryService(ctx)
+                    .findAllByQuery("select info from PlaneInfo as info " +
+                                    "join fetch info.deltaT as dt " +
+                                    "join fetch info.exposureTime as et " +
+                                    "where info.pixels.id=" + pixels.getId(),
+                            null);
+
+            System.out.println("taille object infos " + objectinfos.size());
+
+            PlaneInfo planeinfo = (PlaneInfo)(objectinfos.get(0));
+
+            System.out.println("plane info : " + planeinfo.getPositionX());
 
 
             // End of session
@@ -156,6 +187,8 @@ public class RawPixelsfromSource implements Command {
 
         } catch (Exception e) {
             e.printStackTrace();
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
         }
     }
 
@@ -182,7 +215,7 @@ public class RawPixelsfromSource implements Command {
 
         //lif 4 channels, (1024 1024)
         //ij.command().run(RawPixelsfromSource.class, true, "imageID",24720);
-        //ij.command().run(RawPixelsfromSource.class, true, "imageID",18024).get();
+        //ij.command().run(RawPixelsfromSource.class, true, "imageID", 18317).get();
 
         //small vsi fluo
         //ij.command().run(RawPixelsfromSource.class, true, "imageID",14746);

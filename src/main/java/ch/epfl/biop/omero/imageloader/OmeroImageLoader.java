@@ -4,6 +4,8 @@ import bdv.ViewerImgLoader;
 import bdv.cache.CacheControl;
 import bdv.img.cache.VolatileGlobalCellCache;
 import bdv.util.volatiles.SharedQueue;
+import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvOpener;
+import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSource;
 import ch.epfl.biop.bdv.bioformats.imageloader.FileSerieChannel;
 import ch.epfl.biop.omero.omerosource.OmeroSource;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
@@ -54,6 +56,61 @@ public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoad
 
         openers.forEach(opener -> opener.setCache(cc));
 
+        IntStream openersIdxStream = IntStream.range(0, openers.size());
+/*
+        if ((sequenceDescription!=null)) {
+            openersIdxStream.forEach(imageID -> {
+                try {
+                    OmeroSourceOpener opener = openers.get(imageID);
+
+                    log.accept("Data location = "+opener.getDataLocation());
+
+                    IFormatReader memo = opener.getNewReader();
+
+                    tTypeGetter.put(imageID,new HashMap<>());
+                    vTypeGetter.put(iF,new HashMap<>());
+
+                    log.accept("Number of Series : " + memo.getSeriesCount());
+                    IMetadata omeMeta = (IMetadata) memo.getMetadataStore();
+                    memo.setMetadataStore(omeMeta);
+                    // -------------------------- SETUPS For each Series : one per timepoint and one per channel
+
+                    IntStream series = IntStream.range(0, memo.getSeriesCount());
+
+                    final int iFile = iF;
+
+                    series.forEach(iSerie -> {
+                        memo.setSeries(iSerie);
+                        // One serie = one Tile
+                        // ---------- Serie >
+                        // ---------- Serie > Timepoints
+                        log.accept("\t Serie " + iSerie + " Number of timesteps = " + omeMeta.getPixelsSizeT(iSerie).getNumberValue().intValue());
+                        // ---------- Serie > Channels
+                        log.accept("\t Serie " + iSerie + " Number of channels = " + omeMeta.getChannelCount(iSerie));
+                        // Properties of the serie
+                        IntStream channels = IntStream.range(0, omeMeta.getChannelCount(iSerie));
+                        // Register Setups (one per channel and one per timepoint)
+                        channels.forEach(
+                                iCh -> {
+                                    FileSerieChannel fsc = new FileSerieChannel(iFile, iSerie, iCh);
+                                    viewSetupToBFFileSerieChannel.put(viewSetupCounter,fsc);
+                                    viewSetupCounter++;
+                                });
+                        Type t = OmeroSource.getBioformatsBdvSourceType(memo, iSerie);
+                        tTypeGetter.put(imageID,(NumericType)t);
+                        Volatile v = OmeroSource.getVolatileOf((NumericType)t);
+                        vTypeGetter.put(imageID, v);
+                    });
+                    memo.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+
+
+        }
+
+         */
         // NOT CORRECTLY IMPLEMENTED YET
         //final BlockingFetchQueues<Callable<?>> queue = new BlockingFetchQueues<>(1,1);
         cache = new VolatileGlobalCellCache(cc);
