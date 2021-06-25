@@ -4,13 +4,9 @@ import bdv.ViewerImgLoader;
 import bdv.cache.CacheControl;
 import bdv.img.cache.VolatileGlobalCellCache;
 import bdv.util.volatiles.SharedQueue;
-import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvOpener;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSource;
-import ch.epfl.biop.bdv.bioformats.imageloader.FileSerieChannel;
 import ch.epfl.biop.omero.omerosource.OmeroSource;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
-import loci.formats.IFormatReader;
-import loci.formats.meta.IMetadata;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import net.imglib2.Volatile;
@@ -21,13 +17,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.IntStream;
 
 public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoader {
 
     public List<OmeroSourceOpener> openers;
 
-    Map<Integer, OmeroIDChannel> viewSetupToBFFileSerieChannel = new HashMap<>();
+    Map<Integer, OpenerIdxChannel> viewSetupToOpenerIdxChannel = new HashMap<>();
 
     Map<Integer, NumericType> tTypeGetter = new HashMap<>();
 
@@ -43,11 +38,10 @@ public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoad
 
     protected SharedQueue cc;
 
-
     public final int numFetcherThreads;
     public final int numPriorities;
 
-    public OmeroImageLoader(List<OmeroSourceOpener> openers, final AbstractSequenceDescription<?, ?, ?> sequenceDescription, int numFetcherThreads, int numPriorities) {
+    public OmeroImageLoader(List<OmeroSourceOpener> openers, final AbstractSequenceDescription<?, ?, ?> sequenceDescription, int numFetcherThreads, int numPriorities) throws Exception {
         this.openers = openers;
         this.sequenceDescription = sequenceDescription;
         this.numFetcherThreads=numFetcherThreads;
@@ -56,61 +50,24 @@ public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoad
 
         openers.forEach(opener -> opener.setCache(cc));
 
-        IntStream openersIdxStream = IntStream.range(0, openers.size());
-/*
+        int viewSetupCounter = 0;
         if ((sequenceDescription!=null)) {
-            openersIdxStream.forEach(imageID -> {
-                try {
-                    OmeroSourceOpener opener = openers.get(imageID);
-
-                    log.accept("Data location = "+opener.getDataLocation());
-
-                    IFormatReader memo = opener.getNewReader();
-
-                    tTypeGetter.put(imageID,new HashMap<>());
-                    vTypeGetter.put(iF,new HashMap<>());
-
-                    log.accept("Number of Series : " + memo.getSeriesCount());
-                    IMetadata omeMeta = (IMetadata) memo.getMetadataStore();
-                    memo.setMetadataStore(omeMeta);
-                    // -------------------------- SETUPS For each Series : one per timepoint and one per channel
-
-                    IntStream series = IntStream.range(0, memo.getSeriesCount());
-
-                    final int iFile = iF;
-
-                    series.forEach(iSerie -> {
-                        memo.setSeries(iSerie);
-                        // One serie = one Tile
-                        // ---------- Serie >
-                        // ---------- Serie > Timepoints
-                        log.accept("\t Serie " + iSerie + " Number of timesteps = " + omeMeta.getPixelsSizeT(iSerie).getNumberValue().intValue());
-                        // ---------- Serie > Channels
-                        log.accept("\t Serie " + iSerie + " Number of channels = " + omeMeta.getChannelCount(iSerie));
-                        // Properties of the serie
-                        IntStream channels = IntStream.range(0, omeMeta.getChannelCount(iSerie));
-                        // Register Setups (one per channel and one per timepoint)
-                        channels.forEach(
-                                iCh -> {
-                                    FileSerieChannel fsc = new FileSerieChannel(iFile, iSerie, iCh);
-                                    viewSetupToBFFileSerieChannel.put(viewSetupCounter,fsc);
-                                    viewSetupCounter++;
-                                });
-                        Type t = OmeroSource.getBioformatsBdvSourceType(memo, iSerie);
-                        tTypeGetter.put(imageID,(NumericType)t);
-                        Volatile v = OmeroSource.getVolatileOf((NumericType)t);
-                        vTypeGetter.put(imageID, v);
-                    });
-                    memo.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
+            //openersIdxStream.forEach(openerIdx -> {
+            for (int openerIdx=0; openerIdx<openers.size(); openerIdx++){
+                OmeroSourceOpener opener = openers.get(openerIdx);
+                // Register Setups (one per channel and one per timepoint)
+                for (int channelIdx=0; channelIdx<opener.getSizeC(); channelIdx++){
+                    OpenerIdxChannel openerIdxChannel = new OpenerIdxChannel(openerIdx,channelIdx);
+                    viewSetupToOpenerIdxChannel.put(viewSetupCounter,openerIdxChannel);
+                    Type t = opener.getNumericType(0);
+                    tTypeGetter.put(viewSetupCounter,(NumericType)t);
+                    Volatile v =  BioFormatsBdvSource.getVolatileOf((NumericType)t);
+                    vTypeGetter.put(viewSetupCounter, v);
+                    viewSetupCounter++;
                 }
-            });
-
-
+            }
         }
 
-         */
         // NOT CORRECTLY IMPLEMENTED YET
         //final BlockingFetchQueues<Callable<?>> queue = new BlockingFetchQueues<>(1,1);
         cache = new VolatileGlobalCellCache(cc);
@@ -122,17 +79,16 @@ public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoad
         if (imgLoaders.containsKey(setupId)) {
             return imgLoaders.get(setupId);
         } else {
-            int imageID = viewSetupToBFFileSerieChannel.get(setupId).OmeroID;
-            int channel = viewSetupToBFFileSerieChannel.get(setupId).iChannel;
-            log.accept("loading omero image number = "+imageID+" channel = "+channel+" setupId = "+setupId);
+            int openerIdx = viewSetupToOpenerIdxChannel.get(setupId).openerIdx;
+            int channel = viewSetupToOpenerIdxChannel.get(setupId).iChannel;
 
             OmeroSetupLoader imgL = null;
             try {
                 imgL = new OmeroSetupLoader(
-                        openers.get(imageID),
+                        openers.get(openerIdx),
                         channel,
-                        tTypeGetter.get(imageID),
-                        vTypeGetter.get(imageID)
+                        tTypeGetter.get(setupId),
+                        vTypeGetter.get(setupId)
                 );
             } catch (Exception e) {
                 e.printStackTrace();

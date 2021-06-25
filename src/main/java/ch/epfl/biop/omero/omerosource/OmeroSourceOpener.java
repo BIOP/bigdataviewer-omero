@@ -17,6 +17,10 @@ import net.imglib2.FinalInterval;
 import net.imglib2.converter.Converter;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.NumericType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedIntType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.FloatType;
 import ome.formats.model.ChannelData;
 import ome.formats.model.IObjectContainerStore;
 import ome.units.UNITS;
@@ -323,6 +327,23 @@ public class OmeroSourceOpener {
         return null;
     }
 
+    public NumericType getNumericType(int channel) throws Exception {
+        PixelsData pixels = getPixelsDataFromOmeroID(omeroImageID, gateway, securityContext);
+        OmeroSource source;
+        //TODO : get pixel type as a field in omerosourceopener
+        switch(pixels.getPixelType()){
+            case FLOAT_TYPE:
+                return new FloatType();
+            case UINT16_TYPE:
+                return new UnsignedShortType();
+            case UINT8_TYPE:
+                return new UnsignedByteType();
+            case UINT32_TYPE:
+                return new UnsignedIntType();
+            default:
+                throw new IllegalStateException("Unsupported pixel type : " + pixels.getPixelType());
+        }
+    }
 
     public OmeroSourceOpener setCache(SharedQueue cc) {
         this.cc = cc;
