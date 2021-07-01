@@ -36,14 +36,13 @@ import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.MetadataFacility;
 import omero.gateway.model.ImageData;
 import omero.gateway.model.PixelsData;
-import omero.model.Length;
-import omero.model.LengthI;
-import omero.model.LogicalChannel;
-import omero.model.PlaneInfo;
+import omero.model.*;
 import omero.model.enums.UnitsLength;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -61,6 +60,10 @@ public class OmeroSourceOpener {
     }
 
     // All serializable fields (fields needed to create the omeroSourceOpener)
+    public String dataLocation = null; // URL or File
+    public boolean useOmeroXYBlockSize = true; // Block size : use the one defined by Omero
+
+
     long omeroImageID;
     // Channels options
     boolean splitRGBChannels = false;
@@ -71,6 +74,11 @@ public class OmeroSourceOpener {
     // Bioformats location fix
     public double[] positionPreTransformMatrixArray;
     public double[] positionPostTransformMatrixArray;
+    public ome.units.quantity.Length positionReferenceFrameLength;
+    public boolean positionIgnoreBioFormatsMetaData = false;
+    // Bioformats voxsize fix
+    public boolean voxSizeIgnoreBioFormatsMetaData = false;
+    public ome.units.quantity.Length voxSizeReferenceFrameLength;
 
 
     // All non-serializable fields
@@ -129,6 +137,29 @@ public class OmeroSourceOpener {
         return this.stagePosY;
     }
 
+    public String getDataLocation() {
+        return dataLocation;
+    }
+
+    public OmeroSourceOpener positionReferenceFrameLength(ome.units.quantity.Length l) {
+        this.positionReferenceFrameLength = l;
+        return this;
+    }
+
+    public OmeroSourceOpener voxSizeReferenceFrameLength(ome.units.quantity.Length l) {
+        this.voxSizeReferenceFrameLength = l;
+        return this;
+    }
+
+    public OmeroSourceOpener useCacheBlockSizeFromOmero(boolean flag) {
+        useOmeroXYBlockSize = flag;
+        return this;
+    }
+
+    public OmeroSourceOpener location(String location) {
+        this.dataLocation = location;
+        return this;
+    }
 
     //define image ID
     public OmeroSourceOpener imageID(long imageID) {
@@ -184,29 +215,50 @@ public class OmeroSourceOpener {
      */
     public OmeroSourceOpener create() throws Exception {
         //TODO move it to omerosourceopener
+        System.out.println("Load PixelsData...");
         PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(omeroImageID, gateway, securityContext);
+        System.out.println("PixelsData loaded!");
+        System.out.println("Load RawPixelsStore...");
         RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(securityContext);
+        System.out.println("RawPixelsStore loaded!");
         this.pixelsID = pixels.getId();
         rawPixStore.setPixelsId(this.pixelsID, false);
         this.nLevels = rawPixStore.getResolutionLevels();
         this.imageSize = new HashMap<>();
         this.tileSize = new HashMap<>();
-        for (int level = 0; level<this.nLevels; level++){
-            int[] sizes = new int[3];
-            sizes[0] = rawPixStore.getResolutionDescriptions()[level].sizeX;
-            sizes[1] = rawPixStore.getResolutionDescriptions()[level].sizeY;
-            sizes[2] = pixels.getSizeZ();
-            int[] tileSizes = new int[2];
-            tileSizes[0] = Math.min(rawPixStore.getTileSize()[0],rawPixStore.getResolutionDescriptions()[rawPixStore.getResolutionLevels()-1].sizeX);
-            tileSizes[1] = Math.min(rawPixStore.getTileSize()[1],rawPixStore.getResolutionDescriptions()[rawPixStore.getResolutionLevels()-1].sizeY);
-            imageSize.put(level,sizes);
-            tileSize.put(level,tileSizes);
+
+        //Optimize time if there is only one resolution level because getResolutionDescriptions() is time-consuming
+        if(rawPixStore.getResolutionLevels() == 1){
+            imageSize.put(0, new int[]{pixels.getSizeX(), pixels.getSizeY(), pixels.getSizeZ()});
+            tileSize = imageSize;
+        } else {
+            System.out.println("Get image size and tile sizes...");
+            Instant start = Instant.now();
+            ResolutionDescription[] resDesc = rawPixStore.getResolutionDescriptions();
+            Instant finish = Instant.now();
+            System.out.println("Done! Time elapsed : " + Duration.between(start, finish));
+            int tileSizeX = rawPixStore.getTileSize()[0];
+            int tileSizeY = rawPixStore.getTileSize()[1];
+
+            for (int level = 0; level < this.nLevels; level++) {
+                int[] sizes = new int[3];
+                sizes[0] = resDesc[level].sizeX;
+                sizes[1] = resDesc[level].sizeY;
+                sizes[2] = pixels.getSizeZ();
+                int[] tileSizes = new int[2];
+                tileSizes[0] = Math.min(tileSizeX, resDesc[rawPixStore.getResolutionLevels() - 1].sizeX);
+                tileSizes[1] = Math.min(tileSizeY, resDesc[rawPixStore.getResolutionLevels() - 1].sizeY);
+                imageSize.put(level, sizes);
+                tileSize.put(level, tileSizes);
+            }
         }
+
         this.sizeT = pixels.getSizeT();
         this.sizeC = pixels.getSizeC();
 
         //--X and Y stage positions--
-        List<omero.model.IObject> objectinfos = gateway.getQueryService(securityContext)
+        System.out.println("Begin SQL request for OMERO image with ID : " + this.omeroImageID);
+        List<IObject> objectinfos = gateway.getQueryService(securityContext)
                 .findAllByQuery("select info from PlaneInfo as info " +
                                 "join fetch info.deltaT as dt " +
                                 "join fetch info.exposureTime as et " +
@@ -224,6 +276,7 @@ public class OmeroSourceOpener {
             this.stagePosX = 0;
             this.stagePosY = 0;
         }
+        System.out.println("SQL request completed!");
         //psizes are expressed in the unit given in the builder
         this.psizeX = pixels.getPixelSizeX(this.u).getValue();
         this.psizeY = pixels.getPixelSizeY(this.u).getValue();
@@ -373,6 +426,21 @@ public class OmeroSourceOpener {
             default:
                 throw new IllegalStateException("Unsupported pixel type : " + pixels.getPixelType());
         }
+    }
+
+    public static OmeroSourceOpener getOpener() {
+        OmeroSourceOpener opener = new OmeroSourceOpener()
+                .positionReferenceFrameLength(new ome.units.quantity.Length(1, UNITS.MICROMETER)) // Compulsory
+                .voxSizeReferenceFrameLength(new ome.units.quantity.Length(1, UNITS.MICROMETER))
+                .millimeter()
+                .useCacheBlockSizeFromOmero(true);
+        return opener;
+    }
+
+    public OmeroSourceOpener ignoreMetadata() {
+        this.positionIgnoreBioFormatsMetaData = true;
+        this.voxSizeIgnoreBioFormatsMetaData = true;
+        return this;
     }
 
     public OmeroSourceOpener setCache(SharedQueue cc) {

@@ -89,11 +89,13 @@ public class OpenOmeroDataset implements Command {
     @Override
     public void run() {
         try {
+            System.out.println( "Connection to OMERO.....");
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
             System.out.println( "Session active : "+gateway.isConnected() );
             SecurityContext ctx = getSecurityContext(gateway);
 
             for(long imageID=imageID1; imageID<imageID2+1; imageID++){
+                System.out.println("New image from Dataset");
                 //create a new opener and modify it
                 OmeroSourceOpener opener = new OmeroSourceOpener()
                         .imageID(imageID)
@@ -101,7 +103,7 @@ public class OpenOmeroDataset implements Command {
                         .securityContext(ctx)
                         .micrometer()
                         .create();
-
+                System.out.println("Opener has been created");
                 //(new Gson()).toJson(opener);
                 //System.out.println(new Gson().toJson(opener));
 
@@ -178,7 +180,7 @@ public class OpenOmeroDataset implements Command {
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        ij.command().run(RawPixelsfromSource.class, true).get();
+        ij.command().run(OpenOmeroDataset.class, true).get();
 
         //vsi fluo
         //ij.command().run(RawPixelsfromSource.class, true, "imageID",3713).get();
