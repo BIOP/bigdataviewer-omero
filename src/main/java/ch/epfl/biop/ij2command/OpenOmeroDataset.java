@@ -40,8 +40,8 @@ import static ch.epfl.biop.utils.MetadataUtils.getRGBFromWavelength;
  *
  * @parameters ("annotation") : ImageJ input parameters declaration
  */
-@Plugin(type = Command.class, menuPath = "Plugins>BIOP>open OMERO multiresolution image in BDV")
-public class RawPixelsfromSource implements Command {
+@Plugin(type = Command.class, menuPath = "Plugins>BIOP>open OMERO dataset of multiresolution images in BDV")
+public class OpenOmeroDataset implements Command {
 
     @Parameter(label = "OMERO host")
     String host;
@@ -52,8 +52,11 @@ public class RawPixelsfromSource implements Command {
     @Parameter(label = "Enter your gaspar password", style = "password", persist = false)
     String password;
 
-    @Parameter(label = "Enter the ID of your OMERO image")
-    long imageID;
+    @Parameter(label = "Enter the first ID of your dataset")
+    long imageID1;
+
+    @Parameter(label = "Enter the last ID of your dataset")
+    long imageID2;
 
     @Parameter
     boolean autocontrast;
@@ -90,61 +93,62 @@ public class RawPixelsfromSource implements Command {
             System.out.println( "Session active : "+gateway.isConnected() );
             SecurityContext ctx = getSecurityContext(gateway);
 
-            //create a new opener and modify it
-            OmeroSourceOpener opener = new OmeroSourceOpener()
-                    .imageID(imageID)
-                    .gateway(gateway)
-                    .securityContext(ctx)
-                    .micrometer()
-                    .create();
+            for(long imageID=imageID1; imageID<imageID2+1; imageID++){
+                //create a new opener and modify it
+                OmeroSourceOpener opener = new OmeroSourceOpener()
+                        .imageID(imageID)
+                        .gateway(gateway)
+                        .securityContext(ctx)
+                        .micrometer()
+                        .create();
 
-            //(new Gson()).toJson(opener);
-            //System.out.println(new Gson().toJson(opener));
+                //(new Gson()).toJson(opener);
+                //System.out.println(new Gson().toJson(opener));
 
-            //
-            sacs = new SourceAndConverter[opener.getSizeC()];
+                //
+                sacs = new SourceAndConverter[opener.getSizeC()];
 
-            for (int c=0; c<opener.getSizeC(); c++) {
-                // create the right source and convertor depending on the image type
-                sacs[c] = opener.getSourceAndConvertor(c);
-            }
-
-            // give the sources to the sacService (BDV source manager)
-            for (SourceAndConverter sac:sacs){
-                sacService.register(sac);
-            }
-
-            MetadataFacility metadata = gateway.getFacility(MetadataFacility.class);
-            List<ChannelData> channelMetadata = metadata.getChannelData(ctx, imageID);
-
-            for (int i=0;i<sacs.length;i++) {
-                Length emWv = channelMetadata.get(i).getEmissionWavelength(UnitsLength.NANOMETER);
-                Length exWv = channelMetadata.get(i).getExcitationWavelength(UnitsLength.NANOMETER);
-
-                //If EmissionWavelength (or ExcitationWavelength) is contained in the image metadata, convert it to RGB colors for the different channels
-                //Otherwise, put red, green and blue
-                if (emWv != null){
-                    new ColorChanger(sacs[i], getRGBFromWavelength((int)emWv.getValue())).run();
-                } else if (exWv != null){
-                    new ColorChanger(sacs[i], getRGBFromWavelength((int)exWv.getValue())).run();
-                } else {
-                    //new ColorChanger(sacs[i], new ARGBType(ARGBType.rgba(255*(1-(i%3)), 255*(1-((i+1)%3)), 255*(1-((i+2)%3)), 255 ))).run();
-                    //If no emission nor excitation colors, display RGB
-                    new ColorChanger(sacs[i], new ARGBType(ARGBType.rgba(255*(Math.ceil(((i+2)%3)/2)),255*(Math.ceil(((i+1)%3)/2)), 255*(Math.ceil(((i+3)%3)/2)),  255 ))).run();
+                for (int c = 0; c < opener.getSizeC(); c++) {
+                    // create the right source and convertor depending on the image type
+                    sacs[c] = opener.getSourceAndConvertor(c);
                 }
-                //handle autocontrast option
-                if (autocontrast) {
-                    new BrightnessAutoAdjuster(sacs[i], 0).run();
+
+                // give the sources to the sacService (BDV source manager)
+                for (SourceAndConverter sac : sacs) {
+                    sacService.register(sac);
+                }
+
+                MetadataFacility metadata = gateway.getFacility(MetadataFacility.class);
+                List<ChannelData> channelMetadata = metadata.getChannelData(ctx, imageID);
+
+                for (int i = 0; i < sacs.length; i++) {
+                    Length emWv = channelMetadata.get(i).getEmissionWavelength(UnitsLength.NANOMETER);
+                    Length exWv = channelMetadata.get(i).getExcitationWavelength(UnitsLength.NANOMETER);
+
+                    //If EmissionWavelength (or ExcitationWavelength) is contained in the image metadata, convert it to RGB colors for the different channels
+                    //Otherwise, put red, green and blue
+                    if (emWv != null) {
+                        new ColorChanger(sacs[i], getRGBFromWavelength((int) emWv.getValue())).run();
+                    } else if (exWv != null) {
+                        new ColorChanger(sacs[i], getRGBFromWavelength((int) exWv.getValue())).run();
+                    } else {
+                        //new ColorChanger(sacs[i], new ARGBType(ARGBType.rgba(255*(1-(i%3)), 255*(1-((i+1)%3)), 255*(1-((i+2)%3)), 255 ))).run();
+                        //If no emission nor excitation colors, display RGB
+                        new ColorChanger(sacs[i], new ARGBType(ARGBType.rgba(255 * (Math.ceil(((i + 2) % 3) / 2)), 255 * (Math.ceil(((i + 1) % 3) / 2)), 255 * (Math.ceil(((i + 3) % 3) / 2)), 255))).run();
+                    }
+                    //handle autocontrast option
+                    if (autocontrast) {
+                        new BrightnessAutoAdjuster(sacs[i], 0).run();
+                    }
+                }
+
+                //handle show option
+                if (show) {
+                    SourceAndConverterServices.getBdvDisplayService().show(sacDisplayService.getActiveBdv(), sacs);
+                    //adjust the viewing window in BDV to the image
+                    (new ViewerTransformAdjuster(sacDisplayService.getActiveBdv(), this.sacs[0])).run();
                 }
             }
-
-            //handle show option
-            if (show) {
-                SourceAndConverterServices.getBdvDisplayService().show(sacDisplayService.getActiveBdv(), sacs);
-                //adjust the viewing window in BDV to the image
-                (new ViewerTransformAdjuster(sacDisplayService.getActiveBdv(), this.sacs[0])).run();
-            }
-
 
             // End of session
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {

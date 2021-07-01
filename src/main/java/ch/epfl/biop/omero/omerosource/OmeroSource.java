@@ -49,6 +49,8 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
     double pSizeX;
     double pSizeY;
     double pSizeZ;
+    double stagePosX;
+    double stagePosY;
     OmeroSourceOpener opener;
 
 
@@ -60,6 +62,8 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
         this.pSizeX = opener.getPixelSizeX();
         this.pSizeY = opener.getPixelSizeY();
         this.pSizeZ = opener.getPixelSizeZ();
+        this.stagePosX = opener.getStagePosX();
+        this.stagePosY = opener.getStagePosY();
         this.sizeT = opener.getSizeT();
         this.nLevels = opener.getNLevels();
         this.channel_index = c;
@@ -128,6 +132,7 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
         transform.scale(pSizeX*(double)opener.imageSize.get(0)[0]/(double)opener.imageSize.get(level)[0],
                 pSizeY*(double)opener.imageSize.get(0)[1]/(double)opener.imageSize.get(level)[1],
                 pSizeZ*(double)opener.imageSize.get(0)[2]/(double)opener.imageSize.get(level)[2]);
+        transform.translate(new double[]{stagePosX,stagePosY,0});
     }
 
     @Override

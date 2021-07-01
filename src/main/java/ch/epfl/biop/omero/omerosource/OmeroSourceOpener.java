@@ -37,7 +37,9 @@ import omero.gateway.facility.MetadataFacility;
 import omero.gateway.model.ImageData;
 import omero.gateway.model.PixelsData;
 import omero.model.Length;
+import omero.model.LengthI;
 import omero.model.LogicalChannel;
+import omero.model.PlaneInfo;
 import omero.model.enums.UnitsLength;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
 
@@ -82,6 +84,8 @@ public class OmeroSourceOpener {
     transient double psizeX;
     transient double psizeY;
     transient double psizeZ;
+    transient double stagePosX;
+    transient double stagePosY;
     transient Map<Integer,int[]> imageSize;
     transient Map<Integer,int[]> tileSize;
     transient long pixelsID;
@@ -118,6 +122,13 @@ public class OmeroSourceOpener {
     public double getPixelSizeZ(){
         return this.psizeZ;
     }
+    public double getStagePosX() {
+        return this.stagePosX;
+    }
+    public double getStagePosY(){
+        return this.stagePosY;
+    }
+
 
     //define image ID
     public OmeroSourceOpener imageID(long imageID) {
@@ -194,13 +205,32 @@ public class OmeroSourceOpener {
         this.sizeT = pixels.getSizeT();
         this.sizeC = pixels.getSizeC();
 
+        //--X and Y stage positions--
+        List<omero.model.IObject> objectinfos = gateway.getQueryService(securityContext)
+                .findAllByQuery("select info from PlaneInfo as info " +
+                                "join fetch info.deltaT as dt " +
+                                "join fetch info.exposureTime as et " +
+                                "where info.pixels.id=" + pixels.getId(),
+                        null);
+        if(objectinfos.size() != 0) {
+            //one plane per (c,z,t) combination: we assume that X and Y stage positions are the same in all planes and therefore take the 1st plane
+            PlaneInfo planeinfo = (PlaneInfo) (objectinfos.get(0));
+            //Convert the offsets in the unit given in the builder
+            Length lengthPosX = new LengthI(planeinfo.getPositionX(), this.u);
+            Length lengthPosY = new LengthI(planeinfo.getPositionY(), this.u);
+            this.stagePosX = lengthPosX.getValue();
+            this.stagePosY = lengthPosY.getValue();
+        } else {
+            this.stagePosX = 0;
+            this.stagePosY = 0;
+        }
         //psizes are expressed in the unit given in the builder
         this.psizeX = pixels.getPixelSizeX(this.u).getValue();
         this.psizeY = pixels.getPixelSizeY(this.u).getValue();
         //to handle 2D images
         this.psizeZ = 1;
         Length length = pixels.getPixelSizeZ(this.u);
-        if(length != null){
+        if (length != null) {
             this.psizeZ = length.getValue();
         }
 
