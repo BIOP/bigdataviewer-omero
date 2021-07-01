@@ -13,6 +13,8 @@ import ch.epfl.biop.ij2command.OmeroTools;
 
 import loci.formats.*;
 import loci.formats.meta.IMetadata;
+import mpicbg.spim.data.sequence.VoxelDimensions;
+import net.imglib2.Dimensions;
 import net.imglib2.FinalInterval;
 import net.imglib2.converter.Converter;
 import net.imglib2.realtransform.AffineTransform3D;
@@ -97,6 +99,7 @@ public class OmeroSourceOpener {
     transient Map<Integer,int[]> imageSize;
     transient Map<Integer,int[]> tileSize;
     transient long pixelsID;
+    transient String imageName;
 
     // All get methods
     public int getSizeX(int level) { return this.imageSize.get(level)[0]; }
@@ -140,7 +143,6 @@ public class OmeroSourceOpener {
     public String getDataLocation() {
         return dataLocation;
     }
-
     public OmeroSourceOpener positionReferenceFrameLength(ome.units.quantity.Length l) {
         this.positionReferenceFrameLength = l;
         return this;
@@ -226,6 +228,7 @@ public class OmeroSourceOpener {
         this.nLevels = rawPixStore.getResolutionLevels();
         this.imageSize = new HashMap<>();
         this.tileSize = new HashMap<>();
+        this.imageName = getImageData(omeroImageID, gateway, securityContext).getName();
 
         //Optimize time if there is only one resolution level because getResolutionDescriptions() is time-consuming
         if(rawPixStore.getResolutionLevels() == 1){
@@ -358,12 +361,16 @@ public class OmeroSourceOpener {
     }
 
     public static PixelsData getPixelsDataFromOmeroID(long imageID, Gateway gateway, SecurityContext ctx) throws Exception{
-
-        BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
-        ImageData image = browse.getImage(ctx, imageID);
+        ImageData image = getImageData(imageID, gateway, ctx);
         PixelsData pixels = image.getDefaultPixels();
         return pixels;
 
+    }
+
+    public static ImageData getImageData(long imageID, Gateway gateway, SecurityContext ctx) throws Exception{
+        BrowseFacility browse = gateway.getFacility(BrowseFacility.class);
+        ImageData image = browse.getImage(ctx, imageID);
+        return image;
     }
 
     public SourceAndConverter getSourceAndConvertor(int c) throws Exception {
@@ -428,6 +435,10 @@ public class OmeroSourceOpener {
         }
     }
 
+    public String getImageName() {
+        return (this.imageName + "--OMERO ID:" + this.omeroImageID);
+    }
+
     public static OmeroSourceOpener getOpener() {
         OmeroSourceOpener opener = new OmeroSourceOpener()
                 .positionReferenceFrameLength(new ome.units.quantity.Length(1, UNITS.MICROMETER)) // Compulsory
@@ -435,6 +446,87 @@ public class OmeroSourceOpener {
                 .millimeter()
                 .useCacheBlockSizeFromOmero(true);
         return opener;
+    }
+
+    public Dimensions getDimensions() {
+        // Always set 3d to allow for Big Stitcher compatibility
+        //int numDimensions = 2 + (omeMeta.getPixelsSizeZ(iSerie).getNumberValue().intValue()>1?1:0);
+        int numDimensions = 3;
+
+        int sX = imageSize.get(0)[0];
+        int sY = imageSize.get(0)[1];
+        int sZ = imageSize.get(0)[2];
+
+        long[] dims = new long[3];
+
+        dims[0] = sX;
+        dims[1] = sY;
+        dims[2] = sZ;
+
+        Dimensions dimensions = new Dimensions() {
+            @Override
+            public void dimensions(long[] dimensions) {
+                dimensions[0] = dims[0];
+                dimensions[1] = dims[1];
+                dimensions[2] = dims[2];
+            }
+
+            @Override
+            public long dimension(int d) {
+                return dims[d];
+            }
+
+            @Override
+            public int numDimensions() {
+                return numDimensions;
+            }
+        };
+
+        return dimensions;
+    }
+    public VoxelDimensions getVoxelDimensions(){
+        // Always 3 to allow for big stitcher compatibility
+        int numDimensions = 3;
+
+        double[] d = new double[3];
+        d[0] = psizeX;
+        d[1] = psizeY;
+        d[2] = psizeZ;
+
+        VoxelDimensions voxelDimensions;
+
+        {
+            assert numDimensions == 3;
+            voxelDimensions = new VoxelDimensions() {
+
+                double[] dims = {
+                        d[0],
+                        d[1],
+                        d[2]};
+
+                @Override
+                public String unit() { return u.toString(); }
+
+                @Override
+                public void dimensions(double[] doubles) {
+                    doubles[0] = dims[0];
+                    doubles[1] = dims[1];
+                    doubles[2] = dims[2];
+                }
+
+                @Override
+                public double dimension(int i) {
+                    return dims[i];
+                }
+
+                @Override
+                public int numDimensions() {
+                    return numDimensions;
+                }
+            };
+        }
+        return voxelDimensions;
+
     }
 
     public OmeroSourceOpener ignoreMetadata() {
@@ -447,5 +539,7 @@ public class OmeroSourceOpener {
         this.cc = cc;
         return this;
     }
+
+
 
 }

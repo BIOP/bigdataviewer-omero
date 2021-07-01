@@ -59,7 +59,7 @@ public class OmeroToSpimData {
         int idChannel = channelIdToChannel.get(channelToId.get(channel)).getId();
         return idChannel;
     }
-
+*/
 
     int viewSetupCounter = 0;
     int openerIdxCounter = 0;
@@ -83,45 +83,28 @@ public class OmeroToSpimData {
         Illumination dummy_ill = new Illumination(0);
         // No Angle
         Angle dummy_ang = new Angle(0);
+        // No Tile
+        Tile dummy_tile = new Tile(0);
+        // No Channel
+        Channel dummy_channel = new Channel(0);
         // Many View Setups
         List<ViewSetup> viewSetups = new ArrayList<>();
 
         try {
             for (int openerIdx=0; openerIdx<openers.size(); openerIdx++) {
-                FileIndex fi = new FileIndex(openerIdx);
+                //FileIndex fi = new FileIndex(openerIdx);
                 OmeroSourceOpener opener = openers.get(openerIdx);
-                String dataLocation = openers.get(openerIdx).getDataLocation();
-                fi.setName( dataLocation );
-                //logger.debug("Data located at "+ dataLocation );
-
-                IFormatReader memo = openers.get(openerIdx).getNewReader();
-                //final int seriesCount = memo.getSeriesCount();
-                //logger.debug("Number of Series " + seriesCount );
-                final IMetadata omeMeta = (IMetadata) memo.getMetadataStore();
-
-                // One serie = one Tile
-                Tile tile = new Tile(openerIdxCounter);
-                openerIdxCounter++;
-                // ---------- Serie >
-                // ---------- Serie > Timepoints
-                //logger.debug("\t Number of timesteps = " + omeMeta.getPixelsSizeT(iSerie).getNumberValue().intValue());
-                // ---------- Serie > Channels
-                //logger.debug("\t Number of channels = " + omeMeta.getChannelCount(iSerie));
-                //final int iS = iSerie;
-                // Properties of the serie
-                IntStream channels = IntStream.range(0, omeMeta.getChannelCount(iSerie));
-                if (omeMeta.getPixelsSizeT(iSerie).getNumberValue().intValue() > maxTimepoints) {
+                //openerIdxCounter++;
+                /*if (omeMeta.getPixelsSizeT(iSerie).getNumberValue().intValue() > maxTimepoints) {
                     maxTimepoints = omeMeta.getPixelsSizeT(iSerie).getNumberValue().intValue();
-                }
-                String imageName = getImageName(dataLocation, openerIdxCounter, omeMeta, openerIdx);
-                Dimensions dims = BioFormatsMetaDataHelper.getSeriesDimensions(omeMeta, openerIdx); // number of pixels .. no calibration
+                }*/
+                String imageName = opener.getImageName();
+                Dimensions dims = opener.getDimensions();
                 //logger.debug("X:"+dims.dimension(0)+" Y:"+dims.dimension(1)+" Z:"+dims.dimension(2));
-                VoxelDimensions voxDims = BioFormatsMetaDataHelper.getSeriesVoxelDimensions(omeMeta, iSerie, openers.get(iFile).u, openers.get(iFile).voxSizeReferenceFrameLength);
+                VoxelDimensions voxDims = opener.getVoxelDimensions();
                 // Register Setups (one per channel and one per timepoint)
                 for (int channelIdx=0; channelIdx<opener.getSizeC(); channelIdx++) {
-                    int ch_id = getChannelId(omeMeta, iCh, memo.isRGB());
-                    String channelName = getChannelName(omeMeta, iSerie, iCh);
-
+                    String channelName = opener.getChannelName(channelIdx);
                     String setupName = imageName + "-" + channelName;
                     //logger.debug(setupName);
                     ViewSetup vs = new ViewSetup(
@@ -129,8 +112,8 @@ public class OmeroToSpimData {
                             setupName,
                             dims,
                             voxDims,
-                            tile, // Tile is index of Serie
-                            channelIdToChannel.get(ch_id),
+                            dummy_tile,
+                            dummy_channel,
                             dummy_ang,
                             dummy_ill);
                     vs.setAttribute(fi);
@@ -139,6 +122,7 @@ public class OmeroToSpimData {
                     Displaysettings ds = new Displaysettings(viewSetupCounter);
                     ds.min = 0;
                     ds.max = 255;
+                    /*
                     ds.isSet = false;
 
                     // ----------- Color
@@ -152,15 +136,12 @@ public class OmeroToSpimData {
                                 ARGBType.blue(color.get()),
                                 ARGBType.alpha(color.get())};
                     }
+                    */
                     vs.setAttribute(ds);
-
                     viewSetups.add(vs);
                     viewSetupToOpenerIdxChannel.put(viewSetupCounter, new OpenerIdxChannel(openerIdx,channelIdx));
                     viewSetupCounter++;
-
                 }
-
-                memo.close();
             }
 
             // ------------------- BUILDING SPIM DATA
@@ -215,8 +196,6 @@ public class OmeroToSpimData {
                 });
 
             }
-
-            memo.close();
 
             SequenceDescription sd = new SequenceDescription( new TimePoints( timePoints ), viewSetups , null, new MissingViews(missingViews));
             sd.setImgLoader(new BioFormatsImageLoader(openers,sd,openers.get(0).nFetcherThread, openers.get(0).numPriorities));
@@ -274,7 +253,6 @@ public class OmeroToSpimData {
         return OmeroSourceOpener.getOpener().location(dataLocation).auto();
     }
 
-  */
 
 
 }
