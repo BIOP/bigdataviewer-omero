@@ -16,6 +16,7 @@ import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import ome.units.UNITS;
+import omero.gateway.model.ChannelData;
 import org.apache.commons.io.FilenameUtils;
 import spimdata.util.Displaysettings;
 
@@ -66,7 +67,7 @@ public class OmeroToSpimData {
     int maxTimepoints = -1;
     int channelCounter = 0;
 
-    Map<Integer,Channel> channelIdToChannel = new HashMap<>();
+    //Map<Integer,Channel> channelIdToChannel = new HashMap<>();
     //Map<BioFormatsMetaDataHelper.BioformatsChannel,Integer> channelToId = new HashMap<>();
     //Map<Integer,Integer> fileIdxToNumberOfSeries = new HashMap<>();
     //Map<Integer, SeriesTps> fileIdxToNumberOfSeriesAndTimepoints = new HashMap<>();
@@ -92,7 +93,7 @@ public class OmeroToSpimData {
 
         try {
             for (int openerIdx=0; openerIdx<openers.size(); openerIdx++) {
-                //FileIndex fi = new FileIndex(openerIdx);
+                FileIndex fi = new FileIndex(openerIdx);
                 OmeroSourceOpener opener = openers.get(openerIdx);
                 //openerIdxCounter++;
                 /*if (omeMeta.getPixelsSizeT(iSerie).getNumberValue().intValue() > maxTimepoints) {
@@ -102,9 +103,10 @@ public class OmeroToSpimData {
                 Dimensions dims = opener.getDimensions();
                 //logger.debug("X:"+dims.dimension(0)+" Y:"+dims.dimension(1)+" Z:"+dims.dimension(2));
                 VoxelDimensions voxDims = opener.getVoxelDimensions();
+                List<ChannelData> channelMetadata = opener.getChannelMetadata();
                 // Register Setups (one per channel and one per timepoint)
                 for (int channelIdx=0; channelIdx<opener.getSizeC(); channelIdx++) {
-                    String channelName = opener.getChannelName(channelIdx);
+                    String channelName = channelMetadata.get(channelIdx).getChannelLabeling();
                     String setupName = imageName + "-" + channelName;
                     //logger.debug(setupName);
                     ViewSetup vs = new ViewSetup(
@@ -157,17 +159,13 @@ public class OmeroToSpimData {
             List<ViewId> missingViews = new ArrayList<>();
             for (int openerIdx=0; openerIdx<openers.size(); openerIdx++) {
 
-                IFormatReader memo = openers.get(openerIdx).getNewReader();
-
                 //logger.debug("Number of Series : " + memo.getSeriesCount());
-                final IMetadata omeMeta = (IMetadata) memo.getMetadataStore();
 
                 // Need to set view registrations : identity ? how does that work with the one given by the image loader ?
                 //IntStream series = IntStream.range(0, nSeries);
 
-                final int nTimepoints = omeMeta.getPixelsSizeT(openerIdxCounter).getNumberValue().intValue();
-                AffineTransform3D rootTransform = BioFormatsMetaDataHelper.getSeriesRootTransform(
-                        omeMeta,
+                final int nTimepoints = openers.get(openerIdx).getSizeT();
+                /*AffineTransform3D rootTransform = BioFormatsMetaDataHelper.getSeriesRootTransform(
                         openers.get(openerIdx).u,
                         openers.get(openerIdx).positionPreTransformMatrixArray, //AffineTransform3D positionPreTransform,
                         openers.get(openerIdx).positionPostTransformMatrixArray, //AffineTransform3D positionPostTransform,
@@ -177,14 +175,14 @@ public class OmeroToSpimData {
                         openers.get(openerIdx).voxSizePostTransformMatrixArray, //AffineTransform3D voxSizePostTransform,
                         openers.get(openerIdx).voxSizeReferenceFrameLength, //null, //Length voxSizeReferenceFrameLength,
                         openers.get(openerIdx).axesOfImageFlip // axesOfImageFlip
-                );
-
+                );*/
+                AffineTransform3D rootTransform = new AffineTransform3D();
+                final int oIdx = openerIdx;
                 timePoints.forEach(iTp -> {
                     viewSetupToOpenerIdxChannel
                         .keySet()
                         .stream()
-                        .filter(viewSetupId -> (viewSetupToOpenerIdxChannel.get(viewSetupId).openerIdx == openerIdx))
-                        .filter(viewSetupId -> (viewSetupToOpenerIdxChannel.get(viewSetupId).openerIdx == openerIdx))
+                        .filter(viewSetupId -> (viewSetupToOpenerIdxChannel.get(viewSetupId).openerIdx == oIdx))
                         .forEach(viewSetupId -> {
                             if (iTp.getId()<nTimepoints) {
 
@@ -198,7 +196,7 @@ public class OmeroToSpimData {
             }
 
             SequenceDescription sd = new SequenceDescription( new TimePoints( timePoints ), viewSetups , null, new MissingViews(missingViews));
-            sd.setImgLoader(new BioFormatsImageLoader(openers,sd,openers.get(0).nFetcherThread, openers.get(0).numPriorities));
+            sd.setImgLoader(new OmeroImageLoader(openers,sd,openers.get(0).getNumFetcherThreads(), openers.get(0).getNumPriorities()));
 
             final SpimData spimData = new SpimData( null, sd, new ViewRegistrations( registrations ) );
             return spimData;
@@ -209,22 +207,6 @@ public class OmeroToSpimData {
         return null;
     }
 
-    private String getChannelName( IMetadata omeMeta, int openerIdx, int iCh)
-    {
-        String channelName = omeMeta.getChannelName(openerIdx, iCh);
-        channelName = ( channelName == null || channelName.equals( "" ) )  ? "ch" + iCh : channelName;
-        return channelName;
-    }
-
-    private String getImageName( String dataLocation, int openerIdxCount, IMetadata  omeMeta, int openerIdx)
-    {
-        String imageName = omeMeta.getImageName(openerIdx);
-        String fileNameWithoutExtension = FilenameUtils.removeExtension( new File( dataLocation ).getName() );
-        fileNameWithoutExtension = fileNameWithoutExtension.replace( ".ome", "" ); // above only removes .tif
-        imageName = ( imageName == null || imageName.equals( "" ) ) ? fileNameWithoutExtension : imageName;
-        imageName = openerIdxCount > 1 ?  imageName + "-s" + openerIdx : imageName;
-        return imageName;
-    }
 
     public static AbstractSpimData getSpimData(List<OmeroSourceOpener> openers) {
         return new OmeroToSpimData().getSpimDataInstance(openers);
@@ -250,7 +232,7 @@ public class OmeroToSpimData {
     }
 
     public static OmeroSourceOpener getDefaultOpener(String dataLocation) {
-        return OmeroSourceOpener.getOpener().location(dataLocation).auto();
+        return OmeroSourceOpener.getOpener().location(dataLocation);
     }
 
 

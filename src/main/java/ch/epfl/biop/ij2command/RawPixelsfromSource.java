@@ -114,9 +114,7 @@ public class RawPixelsfromSource implements Command {
                 sacService.register(sac);
             }
 
-            MetadataFacility metadata = gateway.getFacility(MetadataFacility.class);
-            List<ChannelData> channelMetadata = metadata.getChannelData(ctx, imageID);
-
+            List<ChannelData> channelMetadata = opener.getChannelMetadata();
             for (int i=0;i<sacs.length;i++) {
                 Length emWv = channelMetadata.get(i).getEmissionWavelength(UnitsLength.NANOMETER);
                 Length exWv = channelMetadata.get(i).getExcitationWavelength(UnitsLength.NANOMETER);

@@ -23,7 +23,6 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedIntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
-import ome.formats.model.ChannelData;
 import ome.formats.model.IObjectContainerStore;
 import ome.units.UNITS;
 import ome.units.unit.Unit;
@@ -36,6 +35,7 @@ import omero.gateway.Gateway;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.MetadataFacility;
+import omero.gateway.model.ChannelData;
 import omero.gateway.model.ImageData;
 import omero.gateway.model.PixelsData;
 import omero.model.*;
@@ -81,10 +81,11 @@ public class OmeroSourceOpener {
     // Bioformats voxsize fix
     public boolean voxSizeIgnoreBioFormatsMetaData = false;
     public ome.units.quantity.Length voxSizeReferenceFrameLength;
-
+    public int numFetcherThreads = 2;
+    public int numPriorities = 4;
 
     // All non-serializable fields
-    transient SharedQueue cc = new SharedQueue(2, 4);
+    transient SharedQueue cc;
     transient Gateway gateway;
     transient SecurityContext securityContext;
     transient RawPixelsStorePool pool = new RawPixelsStorePool(10, true, this::getNewStore);
@@ -100,6 +101,7 @@ public class OmeroSourceOpener {
     transient Map<Integer,int[]> tileSize;
     transient long pixelsID;
     transient String imageName;
+    transient List<ChannelData> channelMetadata;
 
     // All get methods
     public int getSizeX(int level) { return this.imageSize.get(level)[0]; }
@@ -143,6 +145,10 @@ public class OmeroSourceOpener {
     public String getDataLocation() {
         return dataLocation;
     }
+    public List<ChannelData> getChannelMetadata() { return channelMetadata; }
+    public int getNumFetcherThreads() { return numFetcherThreads; }
+    public int getNumPriorities() { return numPriorities; }
+
     public OmeroSourceOpener positionReferenceFrameLength(ome.units.quantity.Length l) {
         this.positionReferenceFrameLength = l;
         return this;
@@ -207,6 +213,19 @@ public class OmeroSourceOpener {
         return this;
     }
 
+    //define num fetcher threads
+    public OmeroSourceOpener numFetcherThreads(int numFetcherThreads) {
+        this.numFetcherThreads = numFetcherThreads;
+        return this;
+    }
+
+    //define num fetcher threads
+    public OmeroSourceOpener numPriorities(int numPriorities) {
+        this.numPriorities = numPriorities;
+        return this;
+    }
+
+
     // define size fields based on omero image ID, gateway and security context
 
     /**
@@ -223,12 +242,14 @@ public class OmeroSourceOpener {
         System.out.println("Load RawPixelsStore...");
         RawPixelsStorePrx rawPixStore = gateway.getPixelsStore(securityContext);
         System.out.println("RawPixelsStore loaded!");
+        this.cc = new SharedQueue(numFetcherThreads, numPriorities);
         this.pixelsID = pixels.getId();
         rawPixStore.setPixelsId(this.pixelsID, false);
         this.nLevels = rawPixStore.getResolutionLevels();
         this.imageSize = new HashMap<>();
         this.tileSize = new HashMap<>();
         this.imageName = getImageData(omeroImageID, gateway, securityContext).getName();
+        this.channelMetadata = gateway.getFacility(MetadataFacility.class).getChannelData(securityContext,omeroImageID);
 
         //Optimize time if there is only one resolution level because getResolutionDescriptions() is time-consuming
         if(rawPixStore.getResolutionLevels() == 1){
