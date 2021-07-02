@@ -7,7 +7,7 @@ import java.util.concurrent.Future;
 
 public class OmeroOpenImageCommandTest {
 
-    @Test
+
     public void run() throws Exception {
         // Arrange
         // create the ImageJ application context with all available services

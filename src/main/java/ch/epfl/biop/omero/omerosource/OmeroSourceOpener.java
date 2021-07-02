@@ -72,7 +72,7 @@ public class OmeroSourceOpener {
     // Unit used for display
     public UnitsLength u;
     // Size of the blocks
-    public FinalInterval cacheBlockSize = new FinalInterval(new long[]{0, 0, 0}, new long[]{512, 512, 1}); // needs a default size for z
+    //public FinalInterval cacheBlockSize = new FinalInterval(new long[]{0, 0, 0}, new long[]{512, 512, 1}); // needs a default size for z
     // Bioformats location fix
     public double[] positionPreTransformMatrixArray;
     public double[] positionPostTransformMatrixArray;

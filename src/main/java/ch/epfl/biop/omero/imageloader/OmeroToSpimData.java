@@ -119,12 +119,12 @@ public class OmeroToSpimData {
                             dummy_ang,
                             dummy_ill);
                     vs.setAttribute(fi);
-
+                    /*
                     // Attempt to set color
                     Displaysettings ds = new Displaysettings(viewSetupCounter);
                     ds.min = 0;
                     ds.max = 255;
-                    /*
+
                     ds.isSet = false;
 
                     // ----------- Color
@@ -138,8 +138,10 @@ public class OmeroToSpimData {
                                 ARGBType.blue(color.get()),
                                 ARGBType.alpha(color.get())};
                     }
-                    */
+
                     vs.setAttribute(ds);
+                    */
+
                     viewSetups.add(vs);
                     viewSetupToOpenerIdxChannel.put(viewSetupCounter, new OpenerIdxChannel(openerIdx,channelIdx));
                     viewSetupCounter++;

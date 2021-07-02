@@ -4,6 +4,7 @@ import bdv.AbstractViewerSetupImgLoader;
 import bdv.viewer.Source;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSource;
 import ch.epfl.biop.bdv.bioformats.imageloader.BioFormatsSetupLoader;
+import ch.epfl.biop.omero.omerosource.OmeroSource;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
 import mpicbg.spim.data.generic.sequence.ImgLoaderHint;
 import mpicbg.spim.data.sequence.MultiResolutionSetupImgLoader;
@@ -28,7 +29,7 @@ public class OmeroSetupLoader<T extends NumericType<T>,V extends Volatile<T> & N
     public Source<T> concreteSource;
     public Source<V> volatileSource;
 
-    int[] cellDimensions;
+    //int[] cellDimensions;
 
     Function<RandomAccessibleInterval<T>, RandomAccessibleInterval<FloatType>> cvtRaiToFloatRai;
 
@@ -54,7 +55,7 @@ public class OmeroSetupLoader<T extends NumericType<T>,V extends Volatile<T> & N
         concreteSource = sources.get(0);
         volatileSource = sources.get(1);
 
-        cellDimensions = ((BioFormatsBdvSource) concreteSource).cellDimensions;
+        //cellDimensions = new int[]{opener.getTileSizeX(0),opener.getTileSizeY(0),1};
 
         if (t instanceof FloatType) {
             cvt = null;
