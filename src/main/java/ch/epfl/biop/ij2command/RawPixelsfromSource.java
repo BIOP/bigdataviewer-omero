@@ -56,6 +56,9 @@ public class RawPixelsfromSource implements Command {
     long imageID;
 
     @Parameter
+    boolean displayInSpace;
+
+    @Parameter
     boolean autocontrast;
 
     @Parameter
@@ -96,6 +99,7 @@ public class RawPixelsfromSource implements Command {
                     .gateway(gateway)
                     .securityContext(ctx)
                     .micrometer()
+                    .displayInSpace(displayInSpace)
                     .create();
 
             //(new Gson()).toJson(opener);

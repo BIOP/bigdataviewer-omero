@@ -102,6 +102,7 @@ public class OmeroSourceOpener {
     transient long pixelsID;
     transient String imageName;
     transient List<ChannelData> channelMetadata;
+    boolean displayInSpace;
 
     // All get methods
     public int getSizeX(int level) { return this.imageSize.get(level)[0]; }
@@ -172,6 +173,12 @@ public class OmeroSourceOpener {
     //define image ID
     public OmeroSourceOpener imageID(long imageID) {
         this.omeroImageID = imageID;
+        return this;
+    }
+
+    //define image ID
+    public OmeroSourceOpener displayInSpace(boolean displayInSpace) {
+        this.displayInSpace = displayInSpace;
         return this;
     }
 

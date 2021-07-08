@@ -96,9 +96,9 @@ public class OmeroToSpimData {
                 FileIndex fi = new FileIndex(openerIdx);
                 OmeroSourceOpener opener = openers.get(openerIdx);
                 //openerIdxCounter++;
-                /*if (omeMeta.getPixelsSizeT(iSerie).getNumberValue().intValue() > maxTimepoints) {
-                    maxTimepoints = omeMeta.getPixelsSizeT(iSerie).getNumberValue().intValue();
-                }*/
+                if (opener.getSizeT() > maxTimepoints) {
+                    maxTimepoints = opener.getSizeT();
+                }
                 String imageName = opener.getImageName();
                 Dimensions dims = opener.getDimensions();
                 //logger.debug("X:"+dims.dimension(0)+" Y:"+dims.dimension(1)+" Z:"+dims.dimension(2));

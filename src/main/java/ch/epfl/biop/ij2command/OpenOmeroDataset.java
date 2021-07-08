@@ -102,6 +102,7 @@ public class OpenOmeroDataset implements Command {
                         .gateway(gateway)
                         .securityContext(ctx)
                         .micrometer()
+                        .displayInSpace(true)
                         .create();
                 System.out.println("Opener has been created");
                 //(new Gson()).toJson(opener);
