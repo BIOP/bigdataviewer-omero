@@ -43,7 +43,7 @@ public class OpenFilesWithBigDataViewerOmeroBridgeCommand implements Command {
     @Parameter(label = "OMERO IDs")
     public String omeroIDs;
 
-    //@Parameter(type = ItemIO.OUTPUT)
+    @Parameter(type = ItemIO.OUTPUT)
     AbstractSpimData spimdata;
 
     @Parameter(label = "OMERO host")

@@ -1,16 +1,20 @@
 package ch.epfl.biop.omero.imageloader;
+import ch.epfl.biop.ij2command.OmeroTools;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
 import com.google.gson.Gson;
 import mpicbg.spim.data.XmlHelpers;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.ImgLoaderIo;
 import mpicbg.spim.data.generic.sequence.XmlIoBasicImgLoader;
+import omero.gateway.Gateway;
+import omero.gateway.SecurityContext;
 import org.jdom2.Element;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
 import static mpicbg.spim.data.XmlKeys.IMGLOADER_FORMAT_ATTRIBUTE_NAME;
 
 
@@ -57,11 +61,22 @@ public class XmlIoOmeroImgLoader implements XmlIoBasicImgLoader<OmeroImageLoader
                 throw new UnsupportedOperationException("Error class "+openerClassName+" not recognized.");
             }
 
+            //TODO handle login to OMERO
+            String host = "omero-poc.epfl.ch";
+            String username = "demo";
+            String password = "*****";
+            int port = 4064;
+
+            Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
+            SecurityContext ctx = getSecurityContext(gateway);
             Gson gson = new Gson();
             for (int i=0;i<number_of_datasets;i++) {
                 // Opener de-serialization
                 String jsonInString = XmlHelpers.getText( elem, OPENER_TAG+"_"+i );
                 OmeroSourceOpener opener = gson.fromJson(jsonInString, OmeroSourceOpener.class);
+                opener.gateway(gateway)
+                        .securityContext(ctx)
+                        .create();
                 openers.add(opener);
             }
 
