@@ -8,6 +8,7 @@ import ch.epfl.biop.bdv.bioformats.export.spimdata.BioFormatsConvertFilesToSpimD
 import ch.epfl.biop.omero.imageloader.OmeroToSpimData;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
 import mpicbg.spim.data.generic.AbstractSpimData;
+import net.imagej.ImageJ;
 import ome.units.quantity.Length;
 import ome.units.unit.Unit;
 import omero.gateway.Gateway;
@@ -207,6 +208,15 @@ public class OpenFilesWithBigDataViewerOmeroBridgeCommand implements Command {
         } catch (Throwable throwable) {
             throwable.printStackTrace();
         }
+    }
+
+    public static void main(final String... args) throws Exception {
+        // create the ImageJ application context with all available services
+        final ImageJ ij = new ImageJ();
+        ij.ui().showUI();
+
+        ij.command().run(OpenFilesWithBigDataViewerOmeroBridgeCommand.class, true).get();
+
     }
 
 }

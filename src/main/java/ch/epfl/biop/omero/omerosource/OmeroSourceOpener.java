@@ -18,6 +18,7 @@ import net.imglib2.Dimensions;
 import net.imglib2.FinalInterval;
 import net.imglib2.converter.Converter;
 import net.imglib2.realtransform.AffineTransform3D;
+import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedIntType;
@@ -41,6 +42,7 @@ import omero.gateway.model.PixelsData;
 import omero.model.*;
 import omero.model.enums.UnitsLength;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
+import sc.fiji.bdvpg.sourceandconverter.display.ColorChanger;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -50,6 +52,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static ch.epfl.biop.utils.MetadataUtils.getRGBFromWavelength;
 import static omero.gateway.model.PixelsData.*;
 
 /**
@@ -428,6 +431,23 @@ public class OmeroSourceOpener {
         sources.add(volatileSource);
         return sources;
 
+    }
+
+    public ARGBType getChannelColor(int c) throws Exception{
+        Length emWv = channelMetadata.get(c).getEmissionWavelength(UnitsLength.NANOMETER);
+        Length exWv = channelMetadata.get(c).getExcitationWavelength(UnitsLength.NANOMETER);
+
+        //If EmissionWavelength (or ExcitationWavelength) is contained in the image metadata, convert it to RGB colors for the different channels
+        //Otherwise, put red, green and blue
+        if (emWv != null) {
+            return getRGBFromWavelength((int) emWv.getValue());
+        } else if (exWv != null) {
+            return getRGBFromWavelength((int) exWv.getValue());
+        } else {
+            //new ColorChanger(sacs[i], new ARGBType(ARGBType.rgba(255*(1-(i%3)), 255*(1-((i+1)%3)), 255*(1-((i+2)%3)), 255 ))).run();
+            //If no emission nor excitation colors, display RGB
+            return new ARGBType(ARGBType.rgba(255 * (Math.ceil(((c + 2) % 3) / 2)), 255 * (Math.ceil(((c + 1) % 3) / 2)), 255 * (Math.ceil(((c + 3) % 3) / 2)), 255));
+        }
     }
 
 

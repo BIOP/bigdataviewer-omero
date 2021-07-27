@@ -127,22 +127,9 @@ public class OpenImagesFromOmeroURL implements Command {
                     sacService.register(sac);
                 }
 
-                List<ChannelData> channelMetadata = opener.getChannelMetadata();
                 for (int i = 0; i < sacs.length; i++) {
-                    Length emWv = channelMetadata.get(i).getEmissionWavelength(UnitsLength.NANOMETER);
-                    Length exWv = channelMetadata.get(i).getExcitationWavelength(UnitsLength.NANOMETER);
-
-                    //If EmissionWavelength (or ExcitationWavelength) is contained in the image metadata, convert it to RGB colors for the different channels
-                    //Otherwise, put red, green and blue
-                    if (emWv != null) {
-                        new ColorChanger(sacs[i], getRGBFromWavelength((int) emWv.getValue())).run();
-                    } else if (exWv != null) {
-                        new ColorChanger(sacs[i], getRGBFromWavelength((int) exWv.getValue())).run();
-                    } else {
-                        //new ColorChanger(sacs[i], new ARGBType(ARGBType.rgba(255*(1-(i%3)), 255*(1-((i+1)%3)), 255*(1-((i+2)%3)), 255 ))).run();
-                        //If no emission nor excitation colors, display RGB
-                        new ColorChanger(sacs[i], new ARGBType(ARGBType.rgba(255 * (Math.ceil(((i + 2) % 3) / 2)), 255 * (Math.ceil(((i + 1) % 3) / 2)), 255 * (Math.ceil(((i + 3) % 3) / 2)), 255))).run();
-                    }
+                    ARGBType argbType = opener.getChannelColor(i);
+                    new ColorChanger(sacs[i], argbType).run();
                     //handle autocontrast option
                     if (autocontrast) {
                         new BrightnessAutoAdjuster(sacs[i], 0).run();
