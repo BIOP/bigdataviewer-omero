@@ -86,8 +86,7 @@ public class OmeroToSpimData {
         Angle dummy_ang = new Angle(0);
         // No Tile
         Tile dummy_tile = new Tile(0);
-        // No Channel
-        Channel dummy_channel = new Channel(0);
+
         // Many View Setups
         List<ViewSetup> viewSetups = new ArrayList<>();
 
@@ -109,26 +108,16 @@ public class OmeroToSpimData {
                     String channelName = channelMetadata.get(channelIdx).getChannelLabeling();
                     String setupName = imageName + "-" + channelName;
                     //logger.debug(setupName);
-                    ViewSetup vs = new ViewSetup(
-                            viewSetupCounter,
-                            setupName,
-                            dims,
-                            voxDims,
-                            dummy_tile,
-                            dummy_channel,
-                            dummy_ang,
-                            dummy_ill);
-                    vs.setAttribute(fi);
-                    /*
+
+                    Channel channel = new Channel(channelIdx);
                     // Attempt to set color
                     Displaysettings ds = new Displaysettings(viewSetupCounter);
                     ds.min = 0;
                     ds.max = 255;
-
-                    ds.isSet = false;
+                    ds.isSet = true;
 
                     // ----------- Color
-                    ARGBType color = BioFormatsMetaDataHelper.getColorFromMetadata(omeMeta, iSerie, iCh);
+                    ARGBType color = opener.getChannelColor(channelIdx);
 
                     if (color != null) {
                         ds.isSet = true;
@@ -139,8 +128,17 @@ public class OmeroToSpimData {
                                 ARGBType.alpha(color.get())};
                     }
 
+                    ViewSetup vs = new ViewSetup(
+                            viewSetupCounter,
+                            setupName,
+                            dims,
+                            voxDims,
+                            dummy_tile,
+                            channel,
+                            dummy_ang,
+                            dummy_ill);
+                    vs.setAttribute(fi);
                     vs.setAttribute(ds);
-                    */
 
                     viewSetups.add(vs);
                     viewSetupToOpenerIdxChannel.put(viewSetupCounter, new OpenerIdxChannel(openerIdx,channelIdx));
@@ -205,7 +203,6 @@ public class OmeroToSpimData {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return null;
     }
 

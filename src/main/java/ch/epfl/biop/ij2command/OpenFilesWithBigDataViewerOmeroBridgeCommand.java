@@ -1,16 +1,10 @@
 package ch.epfl.biop.ij2command;
 
 import bdv.util.BdvFunctions;
-import ch.epfl.biop.bdv.bioformats.BioFormatsMetaDataHelper;
-import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvOpener;
-import ch.epfl.biop.bdv.bioformats.command.BioformatsBigdataviewerBridgeDatasetCommand;
-import ch.epfl.biop.bdv.bioformats.export.spimdata.BioFormatsConvertFilesToSpimData;
 import ch.epfl.biop.omero.imageloader.OmeroToSpimData;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import net.imagej.ImageJ;
-import ome.units.quantity.Length;
-import ome.units.unit.Unit;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import org.apache.commons.lang.time.StopWatch;
@@ -21,13 +15,8 @@ import org.scijava.plugin.Plugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
 
 
 @Plugin(type = Command.class,
@@ -59,7 +48,7 @@ public class OpenFilesWithBigDataViewerOmeroBridgeCommand implements Command {
     static int port = 4064;
 
 
-
+/*
     static public Map<String, Object> getDefaultParameters() {
         Map<String, Object> def = new HashMap();
         def.put("unit", "MILLIMETER");
@@ -172,6 +161,8 @@ public class OpenFilesWithBigDataViewerOmeroBridgeCommand implements Command {
 
         return opener;
     }
+    */
+
 
     public void run() {
         try{
@@ -201,7 +192,7 @@ public class OpenFilesWithBigDataViewerOmeroBridgeCommand implements Command {
             spimdata = OmeroToSpimData.getSpimData(openers);
             watch.stop();
             logger.debug("Converted to SpimData in "+(int)(watch.getTime()/1000)+" s");
-            BdvFunctions.show(spimdata);
+            //BdvFunctions.show(spimdata);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -210,12 +201,21 @@ public class OpenFilesWithBigDataViewerOmeroBridgeCommand implements Command {
         }
     }
 
+    /**
+     * This main function serves for development purposes.
+     * It allows you to run the plugin immediately out of
+     * your integrated development environment (IDE).
+     *
+     * @param args whatever, it's ignored
+     * @throws Exception
+     */
     public static void main(final String... args) throws Exception {
         // create the ImageJ application context with all available services
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
         ij.command().run(OpenFilesWithBigDataViewerOmeroBridgeCommand.class, true).get();
+
 
     }
 
