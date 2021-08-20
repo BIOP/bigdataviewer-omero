@@ -15,8 +15,10 @@ import mpicbg.spim.data.sequence.*;
 import net.imglib2.Dimensions;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
+import ome.model.units.BigResult;
 import ome.units.UNITS;
 import omero.gateway.model.ChannelData;
+import omero.model.enums.UnitsLength;
 import org.apache.commons.io.FilenameUtils;
 import spimdata.util.Displaysettings;
 
@@ -43,30 +45,60 @@ import static ch.epfl.biop.bdv.bioformats.BioFormatsMetaDataHelper.getColorFromW
 
 public class OmeroToSpimData {
 
-    //protected static Logger logger = LoggerFactory.getLogger(OmeroToSpimData.class);
+        public static class ChannelDataComparator {
 
-    /*
-    private int getChannelId(IMetadata omeMeta, int iChannel, boolean isRGB) {
-        BioFormatsMetaDataHelper.BioformatsChannel channel = new BioFormatsMetaDataHelper.BioformatsChannel(omeMeta, iSerie, iChannel, false);
-        if (!channelToId.containsKey(channel)) {
-            // No : add it in the channel hashmap
-            channelToId.put(channel,channelCounter);
-            logger.debug("New Channel for series "+iSerie+", channel "+iChannel+", set as number "+channelCounter);
-            channelIdToChannel.put(channelCounter, new Channel(channelCounter));
-            channelCounter++;
-        } else {
-            logger.debug("Channel for series "+iSerie+", channel "+iChannel+", already known.");
+            double globalMax;
+            int iChannel;
+            String chName = "";
+            double emissionWl = 1;
+            double excitationWl = 1;
+
+
+            public ChannelDataComparator(ChannelData channelData) throws Exception {
+                this.globalMax = channelData.getGlobalMax();
+                this.iChannel = channelData.getIndex();
+                //this.name = channelData.getChannelLabeling();
+
+                if (channelData.getEmissionWavelength(UnitsLength.NANOMETER)!=null) {
+                    this.emissionWl = channelData.getEmissionWavelength(UnitsLength.NANOMETER).getValue();
+                }
+                if (channelData.getExcitationWavelength(UnitsLength.NANOMETER)!=null) {
+                    this.excitationWl = channelData.getExcitationWavelength(UnitsLength.NANOMETER).getValue();
+                }
+                if (channelData.getChannelLabeling()!=null) {
+                    this.chName=channelData.getChannelLabeling();
+                } else {
+                    this.chName= "ch_"+iChannel;
+                }
+
+            }
+
+            @Override
+            public int hashCode() {
+                return (int) (this.chName.hashCode()*this.globalMax*this.emissionWl*this.excitationWl*(iChannel+1));
+            }
+
+            @Override
+            public boolean equals(Object obj) {
+                if (obj instanceof OmeroToSpimData.ChannelDataComparator) {
+                    OmeroToSpimData.ChannelDataComparator cdc = (OmeroToSpimData.ChannelDataComparator) obj;
+                    return  (globalMax == cdc.globalMax)
+                            &&(iChannel == cdc.iChannel)
+                            &&(emissionWl == cdc.emissionWl)
+                            &&(excitationWl == cdc.excitationWl)
+                            &&(chName.equals(cdc.chName));
+                } else {
+                    return false;
+                }
+            }
         }
-        int idChannel = channelIdToChannel.get(channelToId.get(channel)).getId();
-        return idChannel;
-    }
-*/
+
 
     int viewSetupCounter = 0;
     int openerIdxCounter = 0;
     int maxTimepoints = -1;
     int channelCounter = 0;
-
+    Map<ChannelDataComparator,Integer> channelToId = new HashMap<>();
     //Map<Integer,Channel> channelIdToChannel = new HashMap<>();
     //Map<BioFormatsMetaDataHelper.BioformatsChannel,Integer> channelToId = new HashMap<>();
     //Map<Integer,Integer> fileIdxToNumberOfSeries = new HashMap<>();
@@ -105,11 +137,13 @@ public class OmeroToSpimData {
                 List<ChannelData> channelMetadata = opener.getChannelMetadata();
                 // Register Setups (one per channel and one per timepoint)
                 for (int channelIdx=0; channelIdx<opener.getSizeC(); channelIdx++) {
-                    String channelName = channelMetadata.get(channelIdx).getChannelLabeling();
+                    ChannelData channelData = channelMetadata.get(channelIdx);
+                    String channelName = channelData.getChannelLabeling();
                     String setupName = imageName + "-" + channelName;
                     //logger.debug(setupName);
 
-                    Channel channel = new Channel(channelIdx);
+                    // For spimdata
+                    Channel channel = new Channel(getChannelIndex(channelData), channelName);
                     // Attempt to set color
                     Displaysettings ds = new Displaysettings(viewSetupCounter);
                     ds.min = 0;
@@ -204,6 +238,17 @@ public class OmeroToSpimData {
             e.printStackTrace();
         }
         return null;
+    }
+
+    private int getChannelIndex(ChannelData channelData) throws Exception {
+        ChannelDataComparator channelDataComparator = new ChannelDataComparator(channelData);
+        if (!channelToId.containsKey(channelDataComparator)) {
+            // No : add it in the channel hashmap
+            channelToId.put(channelDataComparator,channelCounter);
+            //logger.debug("New Channel for series "+iSerie+", channel "+iChannel+", set as number "+channelCounter);
+            channelCounter++;
+        }
+        return channelToId.get(channelDataComparator);
     }
 
 

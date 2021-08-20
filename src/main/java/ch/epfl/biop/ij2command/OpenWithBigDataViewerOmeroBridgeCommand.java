@@ -1,6 +1,5 @@
 package ch.epfl.biop.ij2command;
 
-import bdv.util.BdvFunctions;
 import ch.epfl.biop.omero.imageloader.OmeroToSpimData;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
 import mpicbg.spim.data.generic.AbstractSpimData;
@@ -23,9 +22,9 @@ import java.util.List;
         menuPath = "Plugins>BIOP>Omero Dataset>Open [Omero Bdv Bridge]",
         description = "description")
 
-public class OpenFilesWithBigDataViewerOmeroBridgeCommand implements Command {
+public class OpenWithBigDataViewerOmeroBridgeCommand implements Command {
 
-    final private static Logger logger = LoggerFactory.getLogger(OpenFilesWithBigDataViewerOmeroBridgeCommand.class);
+    final private static Logger logger = LoggerFactory.getLogger(OpenWithBigDataViewerOmeroBridgeCommand.class);
 
     @Parameter(label = "Name of this dataset")
     public String datasetname = "dataset";
@@ -214,7 +213,7 @@ public class OpenFilesWithBigDataViewerOmeroBridgeCommand implements Command {
         final ImageJ ij = new ImageJ();
         ij.ui().showUI();
 
-        ij.command().run(OpenFilesWithBigDataViewerOmeroBridgeCommand.class, true).get();
+        ij.command().run(OpenWithBigDataViewerOmeroBridgeCommand.class, true).get();
 
 
     }
