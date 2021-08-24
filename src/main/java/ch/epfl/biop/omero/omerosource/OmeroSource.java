@@ -53,6 +53,7 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
     double stagePosY;
     OmeroSourceOpener opener;
     boolean displayInSpace;
+    boolean positionIgnoreBioFormatsMetaData;
 
 
     public OmeroSource(OmeroSourceOpener opener, int c){
@@ -70,6 +71,7 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
         this.channel_index = c;
         this.opener = opener;
         this.displayInSpace = opener.displayInSpace;
+        this.positionIgnoreBioFormatsMetaData = opener.positionIgnoreBioFormatsMetaData;
     }
 
     @Override
@@ -131,11 +133,17 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
     @Override
     public void getSourceTransform(int t, int level, AffineTransform3D transform) {
         transform.identity();
-        transform.scale(pSizeX*(double)opener.imageSize.get(0)[0]/(double)opener.imageSize.get(level)[0],
-                pSizeY*(double)opener.imageSize.get(0)[1]/(double)opener.imageSize.get(level)[1],
-                pSizeZ*(double)opener.imageSize.get(0)[2]/(double)opener.imageSize.get(level)[2]);
-        if (this.displayInSpace == true){
-        transform.translate(new double[]{stagePosX,stagePosY,0});
+        if(positionIgnoreBioFormatsMetaData){
+        transform.scale((double)opener.imageSize.get(0)[0]/(double)opener.imageSize.get(level)[0],
+                (double)opener.imageSize.get(0)[1]/(double)opener.imageSize.get(level)[1],
+                (double)opener.imageSize.get(0)[2]/(double)opener.imageSize.get(level)[2]);
+        } else {
+            transform.scale(pSizeX * (double) opener.imageSize.get(0)[0] / (double) opener.imageSize.get(level)[0],
+                    pSizeY * (double) opener.imageSize.get(0)[1] / (double) opener.imageSize.get(level)[1],
+                    pSizeZ * (double) opener.imageSize.get(0)[2] / (double) opener.imageSize.get(level)[2]);
+            if (this.displayInSpace == true) {
+                transform.translate(new double[]{stagePosX, stagePosY, 0});
+            }
         }
     }
 

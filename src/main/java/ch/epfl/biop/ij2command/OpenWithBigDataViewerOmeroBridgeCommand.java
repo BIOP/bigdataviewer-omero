@@ -1,9 +1,11 @@
 package ch.epfl.biop.ij2command;
 
 import ch.epfl.biop.omero.imageloader.OmeroToSpimData;
-import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
+import ch.epfl.biop.omero.omerosource.*;
+import com.sun.org.apache.bcel.internal.generic.SWITCH;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import net.imagej.ImageJ;
+import omero.model.enums.UnitsLength;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import org.apache.commons.lang.time.StopWatch;
@@ -16,6 +18,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static omero.gateway.model.PixelsData.*;
+import static omero.gateway.model.PixelsData.UINT32_TYPE;
 
 
 @Plugin(type = Command.class,
@@ -46,6 +51,12 @@ public class OpenWithBigDataViewerOmeroBridgeCommand implements Command {
 
     static int port = 4064;
 
+    // Parameter for dataset creation
+    @Parameter(required = false, label="Physical units of the dataset", choices = {"MILLIMETER","MICROMETER","NANOMETER"})
+    public String unit = "MILLIMETER";
+
+
+    public UnitsLength unitsLength;
 
 /*
     static public Map<String, Object> getDefaultParameters() {
@@ -65,10 +76,6 @@ public class OpenWithBigDataViewerOmeroBridgeCommand implements Command {
         def.put("refframesizeinunitvoxsize",1);
         return def;
     }
-
-    // Parameter for dataset creation
-    @Parameter(required = false, label="Physical units of the dataset", choices = {"MILLIMETER","MICROMETER","NANOMETER"})
-    public String unit = "MILLIMETER";
 
     @Parameter(required = false, label="Split RGB channels")
     public boolean splitrgbchannels = false;
@@ -165,6 +172,9 @@ public class OpenWithBigDataViewerOmeroBridgeCommand implements Command {
 
     public void run() {
         try{
+            if (unit=="MILLIMETER"){ unitsLength = UnitsLength.MILLIMETER;}
+            if (unit=="MICROMETER"){ unitsLength = UnitsLength.MICROMETER;}
+            if (unit=="NANOMETER"){ unitsLength = UnitsLength.NANOMETER;}
             List<OmeroSourceOpener> openers = new ArrayList<>();
             String[] omeroIDstrings = omeroIDs.split(",");
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
@@ -180,7 +190,8 @@ public class OpenWithBigDataViewerOmeroBridgeCommand implements Command {
                         .imageID(ID)
                         .gateway(gateway)
                         .securityContext(ctx)
-                        .micrometer()
+                        .unit(unitsLength)
+                        .ignoreMetadata()
                         .create();
 
                 openers.add(opener);

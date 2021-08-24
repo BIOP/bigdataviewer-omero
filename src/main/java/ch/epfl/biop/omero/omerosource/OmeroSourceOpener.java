@@ -29,6 +29,7 @@ import ome.units.UNITS;
 import ome.units.unit.Unit;
 import omero.ServerError;
 import omero.api.IMetadataPrx;
+import omero.api.IRenderingSettingsPrx;
 import omero.api.RawPixelsStorePrx;
 import omero.api.ResolutionDescription;
 import omero.gateway.SecurityContext;
@@ -61,13 +62,14 @@ import static omero.gateway.model.PixelsData.*;
  */
 public class OmeroSourceOpener {
 
+
+
     public OmeroSourceOpener() {
     }
 
     // All serializable fields (fields needed to create the omeroSourceOpener)
     public String dataLocation = null; // URL or File
     public boolean useOmeroXYBlockSize = true; // Block size : use the one defined by Omero
-
 
     long omeroImageID;
     // Channels options
@@ -105,7 +107,8 @@ public class OmeroSourceOpener {
     transient long pixelsID;
     transient String imageName;
     transient List<ChannelData> channelMetadata;
-    boolean displayInSpace;
+    transient boolean displayInSpace;
+    transient RenderingDef renderingDef;
 
     // All get methods
     public int getSizeX(int level) { return this.imageSize.get(level)[0]; }
@@ -150,6 +153,7 @@ public class OmeroSourceOpener {
         return dataLocation;
     }
     public List<ChannelData> getChannelMetadata() { return channelMetadata; }
+    public RenderingDef getRenderingDef() {return renderingDef; }
     public int getNumFetcherThreads() { return numFetcherThreads; }
     public int getNumPriorities() { return numPriorities; }
 
@@ -260,6 +264,8 @@ public class OmeroSourceOpener {
         this.tileSize = new HashMap<>();
         this.imageName = getImageData(omeroImageID, gateway, securityContext).getName();
         this.channelMetadata = gateway.getFacility(MetadataFacility.class).getChannelData(securityContext,omeroImageID);
+        this.renderingDef = gateway.getRenderingSettingsService(securityContext).getRenderingSettings(pixelsID);
+
 
         //Optimize time if there is only one resolution level because getResolutionDescriptions() is time-consuming
         if(rawPixStore.getResolutionLevels() == 1){
@@ -434,6 +440,10 @@ public class OmeroSourceOpener {
     }
 
     public ARGBType getChannelColor(int c) throws Exception{
+
+        ChannelBinding cb = renderingDef.getChannelBinding(c);
+
+        /*
         Length emWv = channelMetadata.get(c).getEmissionWavelength(UnitsLength.NANOMETER);
         Length exWv = channelMetadata.get(c).getExcitationWavelength(UnitsLength.NANOMETER);
 
@@ -447,7 +457,8 @@ public class OmeroSourceOpener {
             //new ColorChanger(sacs[i], new ARGBType(ARGBType.rgba(255*(1-(i%3)), 255*(1-((i+1)%3)), 255*(1-((i+2)%3)), 255 ))).run();
             //If no emission nor excitation colors, display RGB
             return new ARGBType(ARGBType.rgba(255 * (Math.ceil(((c + 2) % 3) / 2)), 255 * (Math.ceil(((c + 1) % 3) / 2)), 255 * (Math.ceil(((c + 3) % 3) / 2)), 255));
-        }
+        }*/
+        return new ARGBType(ARGBType.rgba(cb.getRed().getValue(), cb.getGreen().getValue(), cb.getBlue().getValue(), cb.getAlpha().getValue()));
     }
 
 
@@ -463,6 +474,16 @@ public class OmeroSourceOpener {
             serverError.printStackTrace();
         }
         return null;
+    }
+
+    public AffineTransform3D getSourceTransform(int level) {
+        AffineTransform3D transform = new AffineTransform3D();
+        transform.identity();
+        transform.scale(getPixelSizeX()*(double)imageSize.get(0)[0]/(double)imageSize.get(level)[0],
+                getPixelSizeY()*(double)imageSize.get(0)[1]/(double)imageSize.get(level)[1],
+                getPixelSizeZ()*(double)imageSize.get(0)[2]/(double)imageSize.get(level)[2]);
+        transform.translate(new double[]{getStagePosX(),getStagePosY(),0});
+        return transform;
     }
 
     public NumericType getNumericType(int channel) throws Exception {
@@ -587,7 +608,6 @@ public class OmeroSourceOpener {
         this.cc = cc;
         return this;
     }
-
 
 
 }

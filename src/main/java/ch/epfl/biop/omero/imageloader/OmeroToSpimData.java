@@ -18,6 +18,7 @@ import net.imglib2.type.numeric.ARGBType;
 import ome.model.units.BigResult;
 import ome.units.UNITS;
 import omero.gateway.model.ChannelData;
+import omero.model.ChannelBinding;
 import omero.model.enums.UnitsLength;
 import org.apache.commons.io.FilenameUtils;
 import spimdata.util.Displaysettings;
@@ -75,7 +76,7 @@ public class OmeroToSpimData {
 
             @Override
             public int hashCode() {
-                return (int) (this.chName.hashCode()*this.globalMax*this.emissionWl*this.excitationWl*(iChannel+1));
+                return (int) (this.chName.hashCode()*(this.globalMax+1)*this.emissionWl*this.excitationWl*(iChannel+1));
             }
 
             @Override
@@ -144,15 +145,16 @@ public class OmeroToSpimData {
 
                     // For spimdata
                     Channel channel = new Channel(getChannelIndex(channelData), channelName);
-                    // Attempt to set color
+
+                    // ----------- Set channel contrast (min and max values)
                     Displaysettings ds = new Displaysettings(viewSetupCounter);
-                    ds.min = 0;
-                    ds.max = 255;
+                    ChannelBinding cb = opener.getRenderingDef().getChannelBinding(channelIdx);
+                    ds.min = cb.getInputStart().getValue();
+                    ds.max = cb.getInputEnd().getValue();
                     ds.isSet = true;
 
                     // ----------- Color
                     ARGBType color = opener.getChannelColor(channelIdx);
-
                     if (color != null) {
                         ds.isSet = true;
                         ds.color = new int[]{
@@ -210,7 +212,9 @@ public class OmeroToSpimData {
                         openers.get(openerIdx).voxSizeReferenceFrameLength, //null, //Length voxSizeReferenceFrameLength,
                         openers.get(openerIdx).axesOfImageFlip // axesOfImageFlip
                 );*/
-                AffineTransform3D rootTransform = new AffineTransform3D();
+
+                AffineTransform3D rootTransform = openers.get(openerIdx).getSourceTransform(0);
+
                 final int oIdx = openerIdx;
                 timePoints.forEach(iTp -> {
                     viewSetupToOpenerIdxChannel
