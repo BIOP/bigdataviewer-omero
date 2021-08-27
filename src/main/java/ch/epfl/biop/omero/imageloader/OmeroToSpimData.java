@@ -46,53 +46,7 @@ import static ch.epfl.biop.bdv.bioformats.BioFormatsMetaDataHelper.getColorFromW
 
 public class OmeroToSpimData {
 
-        public static class ChannelDataComparator {
 
-            double globalMax;
-            int iChannel;
-            String chName = "";
-            double emissionWl = 1;
-            double excitationWl = 1;
-
-
-            public ChannelDataComparator(ChannelData channelData) throws Exception {
-                this.globalMax = channelData.getGlobalMax();
-                this.iChannel = channelData.getIndex();
-                //this.name = channelData.getChannelLabeling();
-
-                if (channelData.getEmissionWavelength(UnitsLength.NANOMETER)!=null) {
-                    this.emissionWl = channelData.getEmissionWavelength(UnitsLength.NANOMETER).getValue();
-                }
-                if (channelData.getExcitationWavelength(UnitsLength.NANOMETER)!=null) {
-                    this.excitationWl = channelData.getExcitationWavelength(UnitsLength.NANOMETER).getValue();
-                }
-                if (channelData.getChannelLabeling()!=null) {
-                    this.chName=channelData.getChannelLabeling();
-                } else {
-                    this.chName= "ch_"+iChannel;
-                }
-
-            }
-
-            @Override
-            public int hashCode() {
-                return (int) (this.chName.hashCode()*(this.globalMax+1)*this.emissionWl*this.excitationWl*(iChannel+1));
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                if (obj instanceof OmeroToSpimData.ChannelDataComparator) {
-                    OmeroToSpimData.ChannelDataComparator cdc = (OmeroToSpimData.ChannelDataComparator) obj;
-                    return  (globalMax == cdc.globalMax)
-                            &&(iChannel == cdc.iChannel)
-                            &&(emissionWl == cdc.emissionWl)
-                            &&(excitationWl == cdc.excitationWl)
-                            &&(chName.equals(cdc.chName));
-                } else {
-                    return false;
-                }
-            }
-        }
 
 
     int viewSetupCounter = 0;
@@ -281,6 +235,54 @@ public class OmeroToSpimData {
 
     public static OmeroSourceOpener getDefaultOpener(String dataLocation) {
         return OmeroSourceOpener.getOpener().location(dataLocation);
+    }
+
+    public static class ChannelDataComparator {
+
+        double globalMax;
+        int iChannel;
+        String chName = "";
+        double emissionWl = 1;
+        double excitationWl = 1;
+
+
+        public ChannelDataComparator(ChannelData channelData) throws Exception {
+            this.globalMax = channelData.getGlobalMax();
+            this.iChannel = channelData.getIndex();
+            //this.name = channelData.getChannelLabeling();
+
+            if (channelData.getEmissionWavelength(UnitsLength.NANOMETER)!=null) {
+                this.emissionWl = channelData.getEmissionWavelength(UnitsLength.NANOMETER).getValue();
+            }
+            if (channelData.getExcitationWavelength(UnitsLength.NANOMETER)!=null) {
+                this.excitationWl = channelData.getExcitationWavelength(UnitsLength.NANOMETER).getValue();
+            }
+            if (channelData.getChannelLabeling()!=null) {
+                this.chName=channelData.getChannelLabeling();
+            } else {
+                this.chName= "ch_"+iChannel;
+            }
+
+        }
+
+        @Override
+        public int hashCode() {
+            return (int) (this.chName.hashCode()*(this.globalMax+1)*this.emissionWl*this.excitationWl*(iChannel+1));
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof OmeroToSpimData.ChannelDataComparator) {
+                OmeroToSpimData.ChannelDataComparator cdc = (OmeroToSpimData.ChannelDataComparator) obj;
+                return  (globalMax == cdc.globalMax)
+                        &&(iChannel == cdc.iChannel)
+                        &&(emissionWl == cdc.emissionWl)
+                        &&(excitationWl == cdc.excitationWl)
+                        &&(chName.equals(cdc.chName));
+            } else {
+                return false;
+            }
+        }
     }
 
 

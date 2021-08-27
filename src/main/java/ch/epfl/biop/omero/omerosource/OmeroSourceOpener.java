@@ -72,6 +72,7 @@ public class OmeroSourceOpener {
     public boolean useOmeroXYBlockSize = true; // Block size : use the one defined by Omero
 
     long omeroImageID;
+    public String host;
     // Channels options
     boolean splitRGBChannels = false;
     // Unit used for display
@@ -152,6 +153,9 @@ public class OmeroSourceOpener {
     public String getDataLocation() {
         return dataLocation;
     }
+    public String getHost() {
+        return host;
+    }
     public List<ChannelData> getChannelMetadata() { return channelMetadata; }
     public RenderingDef getRenderingDef() {return renderingDef; }
     public int getNumFetcherThreads() { return numFetcherThreads; }
@@ -183,7 +187,12 @@ public class OmeroSourceOpener {
         return this;
     }
 
-    //define image ID
+    public OmeroSourceOpener host(String host) {
+        this.host = host;
+        return this;
+    }
+
+
     public OmeroSourceOpener displayInSpace(boolean displayInSpace) {
         this.displayInSpace = displayInSpace;
         return this;

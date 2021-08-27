@@ -188,6 +188,7 @@ public class OpenWithBigDataViewerOmeroBridgeCommand implements Command {
                 //create a new opener and modify it
                 OmeroSourceOpener opener = new OmeroSourceOpener()
                         .imageID(ID)
+                        .host(host)
                         .gateway(gateway)
                         .securityContext(ctx)
                         .unit(unitsLength)
