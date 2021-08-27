@@ -2,6 +2,7 @@ package ch.epfl.biop.omero.imageloader;
 import ch.epfl.biop.ij2command.OmeroTools;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
 import com.google.gson.Gson;
+import ij.IJ;
 import mpicbg.spim.data.XmlHelpers;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.ImgLoaderIo;
@@ -88,6 +89,7 @@ public class XmlIoOmeroImgLoader implements XmlIoBasicImgLoader<OmeroImageLoader
                     frame.pack();
                     frame.setLocationRelativeTo(null);
                     frame.setVisible(true);
+
                     String username = (String)JOptionPane.showInputDialog(
                             frame,
                             "Username", null);
