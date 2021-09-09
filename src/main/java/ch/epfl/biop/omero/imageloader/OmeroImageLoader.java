@@ -40,6 +40,14 @@ public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoad
     public final int numFetcherThreads;
     public final int numPriorities;
 
+    /**
+     * OMERO image loader constructor
+     * @param openers
+     * @param sequenceDescription
+     * @param numFetcherThreads
+     * @param numPriorities
+     * @throws Exception
+     */
     public OmeroImageLoader(List<OmeroSourceOpener> openers, final AbstractSequenceDescription<?, ?, ?> sequenceDescription, int numFetcherThreads, int numPriorities) throws Exception {
         this.openers = openers;
         this.sequenceDescription = sequenceDescription;
