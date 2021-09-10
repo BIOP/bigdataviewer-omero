@@ -88,8 +88,8 @@ public class OpenImagesFromOmeroURL implements Command {
     @Override
     public void run() {
         try {
-            SplitOmeroURL splitOmeroURL = new SplitOmeroURL()
-                    .setHost(omeroURL);
+            SplitOmeroURL splitOmeroURL = new SplitOmeroURL();
+            splitOmeroURL.setHost(omeroURL);
             String host = splitOmeroURL.host;
             System.out.println(host);
 

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+
 public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoader {
 
     public List<OmeroSourceOpener> openers;
