@@ -117,7 +117,6 @@
 		<bigdataviewer-bioformats.version>0.2.22</bigdataviewer-bioformats.version>
 		<bigwarp_fiji.version>7.0.2</bigwarp_fiji.version>
 		<bio-formats_plugins.version>6.6.0</bio-formats_plugins.version>
-		<imagej-omero.version>1.0.0-5.5-SNAPSHOT</imagej-omero.version>
 		<bigdataviewer-spimdata-extras.version>0.1.4</bigdataviewer-spimdata-extras.version>
 		<omero-blitz.version>5.5.8</omero-blitz.version>
 		<omero-gateway.version>5.6.5</omero-gateway.version>
@@ -214,12 +213,6 @@
 
 
 		<!-- dependencies added by nico - test -->
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>imagej-omero</artifactId>
-			<version>${imagej-omero.version}</version>
-		</dependency>
-
 		<dependency>
 			<groupId>ome</groupId>
 			<artifactId>bio-formats_plugins</artifactId>
