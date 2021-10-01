@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>org.scijava</groupId>
 		<artifactId>pom-scijava</artifactId>
-		<version>30.0.0</version>
+		<version>31.1.0</version>
 		<relativePath />
 	</parent>
 
@@ -109,16 +109,16 @@
 		<license.copyrightOwners>EPFL</license.copyrightOwners>
 		<ice.version>3.6.5</ice.version>
 		<glacier2.version>${ice.version}</glacier2.version>
-		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
-		<bigdataviewer-vistools.version>1.0.0-beta-28</bigdataviewer-vistools.version>
+		<bigdataviewer-core.version>10.2.1</bigdataviewer-core.version>
+		<bigdataviewer-vistools.version>1.0.0-beta-29</bigdataviewer-vistools.version>
 		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
-		<bigdataviewer-playground-display.version>0.1.7</bigdataviewer-playground-display.version>
-		<bigdataviewer-playground.version>0.3.7</bigdataviewer-playground.version>
-		<bigdataviewer-bioformats.version>0.2.18</bigdataviewer-bioformats.version>
-		<bigwarp_fiji.version>7.0.1</bigwarp_fiji.version>
+		<bigdataviewer-playground-display.version>0.1.8</bigdataviewer-playground-display.version>
+		<bigdataviewer-playground.version>0.3.10</bigdataviewer-playground.version>
+		<bigdataviewer-bioformats.version>0.2.22</bigdataviewer-bioformats.version>
+		<bigwarp_fiji.version>7.0.2</bigwarp_fiji.version>
 		<bio-formats_plugins.version>6.6.0</bio-formats_plugins.version>
 		<imagej-omero.version>1.0.0-5.5-SNAPSHOT</imagej-omero.version>
-		<bigdataviewer-spimdata-extras.version>0.1.2</bigdataviewer-spimdata-extras.version>
+		<bigdataviewer-spimdata-extras.version>0.1.4</bigdataviewer-spimdata-extras.version>
 		<omero-blitz.version>5.5.8</omero-blitz.version>
 		<omero-gateway.version>5.6.5</omero-gateway.version>
 
