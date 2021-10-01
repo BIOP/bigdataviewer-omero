@@ -84,18 +84,19 @@ public class XmlIoOmeroImgLoader implements XmlIoBasicImgLoader<OmeroImageLoader
                 if (!hostToGatewayCtx.containsKey(opener.getHost())) {
                     // No : add it in the channel hashmap
                     //Get credentials
-                    JFrame frame = new JFrame("Connect to OMERO...");
-                    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-                    frame.pack();
-                    frame.setLocationRelativeTo(null);
-                    frame.setVisible(true);
-
                     String username = (String)JOptionPane.showInputDialog(
-                            frame,
-                            "Username", null);
-                    String password = (String)JOptionPane.showInputDialog(
-                            frame,
-                            "Password", null);
+                            null,
+                            "Enter Your OMERO Username: ", null);
+                    JPasswordField jpf = new JPasswordField(24);
+                    Box box = Box.createHorizontalBox();
+                    box.add(jpf);
+                    JOptionPane.showConfirmDialog(null, box, "Enter Your OMERO Password: ", JOptionPane.OK_CANCEL_OPTION);
+                    char[] chArray = jpf.getPassword();
+                    String password = new String (chArray);
+
+                    for (int j=0;j<chArray.length;j++){
+                        chArray[j] = 0;
+                    }
 
                     Gateway gateway =  OmeroTools.omeroConnect(opener.getHost(), port, username, password);
                     SecurityContext ctx = getSecurityContext(gateway);

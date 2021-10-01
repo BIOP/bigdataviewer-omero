@@ -1,5 +1,7 @@
 package ch.epfl.biop.utils;
 
+import ij.measure.ResultsTable;
+import loci.plugins.LociImporter;
 import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSAccessException;
@@ -8,6 +10,7 @@ import omero.gateway.facility.BrowseFacility;
 import omero.gateway.model.ImageData;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
@@ -34,7 +37,7 @@ public class SplitOmeroURL {
 
     /**
      * Set all OMERO image IDs from an OMERO dataset- or image- URL
-     * Supported URLs includes:
+     * Supported URLs include:
      *      - URLs generated from the "create link" button from OMERO.web's mainpage:
      *              - Single image, e.g:  "https://hostname/webclient/?show=image-4738"
      *              - Multiple images, e.g:  "https://hostname/webclient/?show=image-4736|image-4737|image-4738"
