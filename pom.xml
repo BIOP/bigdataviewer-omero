@@ -13,10 +13,10 @@
 	</parent>
 
 	<groupId>ch.epfl.biop</groupId>
-	<artifactId>ImageJ_play_Claire</artifactId>
+	<artifactId>bigdataviewer-omero</artifactId>
 	<version>0.1.0-SNAPSHOT</version>
 
-	<name>ImageJ play Claire</name>
+	<name>BIOP Bigdataviewer OMERO connector</name>
 	<description>A nice project implementing an OMERO connection with ImageJ</description>
 	<url>http://biop.epfl.ch</url>
 	<inceptionYear>2021</inceptionYear>
@@ -84,19 +84,20 @@
 	</mailingLists>
 
 	<scm>
-		<connection>scm:git:git://github.com/</connection>
-		<developerConnection>scm:git:git@github.com:</developerConnection>
+		<connection>scm:git:git://github.com/BIOP/bigdataviewer-omero</connection>
+		<developerConnection>scm:git:git@github.com:BIOP/bigdataviewer-omero</developerConnection>
 		<tag>HEAD</tag>
-		<url>https://github.com/</url>
+		<url>https://github.com/BIOP/bigdataviewer-omero</url>
 	</scm>
 	
 	<issueManagement>
 		<system>GitHub Issues</system>
-		<url></url>
+		<url>https://github.com/BIOP/bigdataviewer-omero/issues</url>
 	</issueManagement>
 
 	<ciManagement>
-		<system>None</system>
+		<system>GitHub Actions</system>
+		<url>https://github.com/BIOP/bigdataviewer-omero/actions</url>
 	</ciManagement>
 
 	<properties>
@@ -106,8 +107,6 @@
 		<class>ch.epfl.biop.ij2command.OmeroOpenImageCommand</class>
 		<license.licenseName>gpl_v3</license.licenseName>
 		<license.copyrightOwners>EPFL</license.copyrightOwners>
-		<scijava.app.directory>C:/Fiji_template</scijava.app.directory>
-		<scijava.app.subdirectory>plugins/BIOP</scijava.app.subdirectory>
 		<ice.version>3.6.5</ice.version>
 		<glacier2.version>${ice.version}</glacier2.version>
 		<bigdataviewer-core.version>10.2.0</bigdataviewer-core.version>
@@ -120,6 +119,9 @@
 		<bio-formats_plugins.version>6.6.0</bio-formats_plugins.version>
 		<imagej-omero.version>1.0.0-5.5-SNAPSHOT</imagej-omero.version>
 		<bigdataviewer-spimdata-extras.version>0.1.2</bigdataviewer-spimdata-extras.version>
+		<omero-blitz.version>5.5.8</omero-blitz.version>
+		<omero-gateway.version>5.6.5</omero-gateway.version>
+
 
 	</properties>
 
@@ -163,12 +165,12 @@
 		<dependency>
 			<groupId>org.openmicroscopy</groupId>
 			<artifactId>omero-blitz</artifactId>
-			<version>5.5.8</version>
+			<version>${omero-blitz.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.openmicroscopy</groupId>
 			<artifactId>omero-gateway</artifactId>
-			<version>5.6.5</version>
+			<version>${omero-gateway.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.openmicroscopy</groupId>
