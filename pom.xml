@@ -27,6 +27,7 @@
 	<licenses>
 		<license>
 			<name>Simplified BSD License</name>
+			<url>https://opensource.org/licenses/BSD-3-Clause</url>
 			<distribution>repo</distribution>
 		</license>
 	</licenses>
@@ -121,7 +122,8 @@
 		<omero-blitz.version>5.5.8</omero-blitz.version>
 		<omero-gateway.version>5.6.5</omero-gateway.version>
 
-
+		<!-- NB: Deploy releases to the SciJava Maven repository. -->
+		<releaseProfiles>sign,deploy-to-scijava</releaseProfiles>
 	</properties>
 
 	<repositories>
