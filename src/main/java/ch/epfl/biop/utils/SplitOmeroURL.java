@@ -39,14 +39,14 @@ public class SplitOmeroURL {
      * Set all OMERO image IDs from an OMERO dataset- or image- URL
      * Supported URLs include:
      *      - URLs generated from the "create link" button from OMERO.web's mainpage:
-     *              - Single image, e.g:  "https://hostname/webclient/?show=image-4738"
-     *              - Multiple images, e.g:  "https://hostname/webclient/?show=image-4736|image-4737|image-4738"
-     *              - Single dataset, e.g:  "https://hostname/webclient/?show=dataset-604"
-     *              - Multiple datasets, e.g:  "https://hostname/webclient/?show=dataset-604|dataset-603"
+     *              - Single image, e.g:  {@code "https://hostname/webclient/?show=image-4738"}
+     *              - Multiple images, e.g:  {@code "https://hostname/webclient/?show=image-4736|image-4737|image-4738"}
+     *              - Single dataset, e.g:  {@code "https://hostname/webclient/?show=dataset-604"}
+     *              - Multiple datasets, e.g:  {@code "https://hostname/webclient/?show=dataset-604|dataset-603"}
      *      - URLs pasted from the OMERO.iviewer
-     *              - Single image opened with a double clic on a thumbnail, e.g:  "https://hostname/webclient/img_detail/4735/?dataset=604"
-     *              - Single image opened with the "open with.. iviewer" button, e.g:  "https://hostname/iviewer/?images=4737&dataset=604"
-     *              - Multiple images opened with the "open with.. iviewer" button, e.g:  "https://hostname/iviewer/?images=4736,4737,4738,4739"
+     *              - Single image opened with a double clic on a thumbnail, e.g:  {@code "https://hostname/webclient/img_detail/4735/?dataset=604"}
+     *              - Single image opened with the "open with.. iviewer" button, e.g:  {@code "https://hostname/iviewer/?images=4737&dataset=604"}
+     *              - Multiple images opened with the "open with.. iviewer" button, e.g: {@code "https://hostname/iviewer/?images=4736,4737,4738,4739"}
      *
      * @param omeroURL OMERO dataset- or image- URL
      * @param gateway OMERO gateway

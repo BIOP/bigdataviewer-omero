@@ -39,7 +39,7 @@ import static ch.epfl.biop.utils.MetadataUtils.getRGBFromWavelength;
 /**
  * Command for displaying an OMERO image (raw pixels) in 3D in BDV
  *
- * @parameters ("annotation") : ImageJ input parameters declaration
+ * parameters ("annotation") : ImageJ input parameters declaration
  */
 @Plugin(type = Command.class, menuPath = "Plugins>BIOP>open OMERO images from URL")
 public class OpenImagesFromOmeroURL implements Command {
