@@ -1,3 +1,5 @@
+[![](https://github.com/BIOP/bigdataviewer-omero/actions/workflows/build-main.yml/badge.svg)](https://github.com/BIOP/bigdataviewer-omero/actions/workflows/build-main.yml)
+
 This is a proof-of-concept Maven project implementing an ImageJ command that access images from OMERO and displays them in BigDataViewer. 
 It can support:
  - multiresolution 5D images
