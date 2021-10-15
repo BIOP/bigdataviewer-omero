@@ -62,7 +62,7 @@ import static ch.epfl.biop.utils.MetadataUtils.getRGBFromWavelength;
  *
  * parameters ("annotation") : ImageJ input parameters declaration
  */
-@Plugin(type = Command.class, menuPath = "Plugins>BIOP>open OMERO images from URL")
+@Plugin(type = Command.class, menuPath = "Plugins>BIOP>OMERO>open OMERO images from URL")
 public class OpenImagesFromOmeroURL implements Command {
 
     @Parameter(label = "OMERO Image or Dataset URL")

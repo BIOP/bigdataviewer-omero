@@ -41,7 +41,7 @@ import java.util.List;
 
 
 @Plugin(type = Command.class,
-        menuPath = "Plugins>BIOP>Omero Dataset>Open [Omero Bdv Bridge]",
+        menuPath = "Plugins>BIOP>OMERO>Open [Omero Bdv Bridge]",
         description = "description")
 
 public class OpenWithBigDataViewerOmeroBridgeCommand implements Command {

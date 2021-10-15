@@ -61,7 +61,7 @@ import static ch.epfl.biop.utils.MetadataUtils.getRGBFromWavelength;
  *
  * parameters ("annotation") : ImageJ input parameters declaration
  */
-@Plugin(type = Command.class, menuPath = "Plugins>BIOP>open OMERO dataset of multiresolution images in BDV")
+@Plugin(type = Command.class, menuPath = "Plugins>BIOP>OMERO>open OMERO dataset of multiresolution images in BDV")
 public class OpenOmeroDataset implements Command {
 
     @Parameter(label = "OMERO host")
