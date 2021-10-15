@@ -4,6 +4,7 @@ import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import org.apache.commons.lang.ArrayUtils;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.lang.reflect.Array;
@@ -15,7 +16,7 @@ import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
 
 public class TestURL {
 
-    @Test
+    @Test @Ignore
     public void testOmeroURL1() throws Exception {
         // Case single image link, generated with the CREATE LINK BUTTON  in OMERO.web
         // Example: https://omero-poc.epfl.ch/webclient/?show=image-4732
@@ -23,7 +24,7 @@ public class TestURL {
         int[] omeroIDs = {4732};
         testOmeroURL(omeroURL, true, omeroIDs);
     }
-    @Test
+    @Test @Ignore
     public void testOmeroURL2() throws Exception {
         // Case multiple images link, generated with the CREATE LINK BUTTON  in OMERO.web
         // Example: https://omero-poc.epfl.ch/webclient/?show=image-24602|image-24603|image-24604|image-24605|image-24606
@@ -32,7 +33,7 @@ public class TestURL {
         testOmeroURL(omeroURL, true, omeroIDs);
     }
 
-    @Test
+    @Test @Ignore
     public void testOmeroURL3() throws Exception {
         // Case single dataset link, generated with the CREATE LINK BUTTON  in OMERO.web
         // Example: https://omero-poc.epfl.ch/webclient/?show=dataset-604
@@ -41,7 +42,7 @@ public class TestURL {
         testOmeroURL(omeroURL, false, omeroIDs);
     }
 
-    @Test
+    @Test @Ignore
     public void testOmeroURL4() throws Exception {
         // Case multiple datasets link, generated with the CREATE LINK BUTTON  in OMERO.web
         // Example: https://omero-poc.epfl.ch/webclient/?show=dataset-604|dataset-603
@@ -52,7 +53,7 @@ public class TestURL {
         testOmeroURL(omeroURL, false, omeroIDs);
     }
 
-    @Test
+    @Test @Ignore
     public void testOmeroURL5() throws Exception {
         // Case single image link, pasted from iviewer (iviewer opened with a double clic on a thumbnail)
         // Example: https://omero-poc.epfl.ch/webclient/img_detail/4732/?dataset=604
@@ -61,7 +62,7 @@ public class TestURL {
         testOmeroURL(omeroURL, true, omeroIDs);
     }
 
-    @Test
+    @Test @Ignore
     public void testOmeroURL6() throws Exception {
         // Case single image link, pasted from iviewer (iviewer opened with the open with button)
         // Example: https://omero-poc.epfl.ch/iviewer/?images=4735&dataset=604
@@ -70,7 +71,7 @@ public class TestURL {
         testOmeroURL(omeroURL, true, omeroIDs);
     }
 
-    @Test
+    @Test @Ignore
     public void testOmeroURL7() throws Exception {
         // Case multiple images link, pasted from iviewer (iviewer opened with the open with button)
         // Example: https://omero-poc.epfl.ch/iviewer/?images=4732,4733,4734,4735
