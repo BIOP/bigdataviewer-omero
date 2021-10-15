@@ -116,7 +116,6 @@
 		<bigdataviewer-playground-display.version>0.1.8</bigdataviewer-playground-display.version>
 		<bigdataviewer-playground.version>0.3.10</bigdataviewer-playground.version>
 		<bigdataviewer-bioformats.version>0.2.22</bigdataviewer-bioformats.version>
-		<bigwarp_fiji.version>7.0.2</bigwarp_fiji.version>
 		<bio-formats_plugins.version>6.6.0</bio-formats_plugins.version>
 		<bigdataviewer-spimdata-extras.version>0.1.4</bigdataviewer-spimdata-extras.version>
 		<omero-blitz.version>5.5.8</omero-blitz.version>
@@ -163,6 +162,12 @@
 			<groupId>org.openmicroscopy</groupId>
 			<artifactId>omero-blitz</artifactId>
 			<version>${omero-blitz.version}</version>
+			<exclusions>
+				<exclusion>  <!-- declare the exclusion here -->
+					<groupId>net.sourceforge.findbugs</groupId>
+					<artifactId>annotations</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.openmicroscopy</groupId>
@@ -202,13 +207,6 @@
 			<artifactId>bigdataviewer-playground-display</artifactId>
 			<version>${bigdataviewer-playground-display.version}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>bigwarp_fiji</artifactId>
-			<version>${bigwarp_fiji.version}</version>
-		</dependency>
-
 
 		<!-- dependencies added by nico - test -->
 		<dependency>

@@ -2,7 +2,6 @@ package ch.epfl.biop.ij2command;
 
 import ch.epfl.biop.omero.imageloader.OmeroToSpimData;
 import ch.epfl.biop.omero.omerosource.*;
-import com.sun.org.apache.bcel.internal.generic.SWITCH;
 import mpicbg.spim.data.generic.AbstractSpimData;
 import net.imagej.ImageJ;
 import omero.model.enums.UnitsLength;
@@ -18,9 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static omero.gateway.model.PixelsData.*;
-import static omero.gateway.model.PixelsData.UINT32_TYPE;
 
 
 @Plugin(type = Command.class,
