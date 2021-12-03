@@ -40,6 +40,8 @@ import net.imglib2.type.numeric.ARGBType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.integer.AbstractIntegerType;
 import net.imglib2.type.numeric.real.FloatType;
+import omero.gateway.Gateway;
+import omero.gateway.SecurityContext;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -103,6 +105,11 @@ public class OmeroSetupLoader<T extends NumericType<T>,V extends Volatile<T> & N
         }
 
     }
+
+    //getters
+    public Gateway getGateway(){ return opener.getGateway(); }
+    public SecurityContext getSecurityContext(){ return opener.getSecurityContext(); }
+    public Long getOmeroId(){ return opener.getOmeroId(); }
 
     @Override
     public RandomAccessibleInterval<V> getVolatileImage(int timepointId, int level, ImgLoaderHint... hints) {

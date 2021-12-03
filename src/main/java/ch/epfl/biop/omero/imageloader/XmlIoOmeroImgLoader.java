@@ -90,12 +90,8 @@ public class XmlIoOmeroImgLoader implements XmlIoBasicImgLoader<OmeroImageLoader
             }
 
             //TODO handle login to OMERO
-            //String username = "demo";
-            //String password = "demotraining";
             int port = 4064;
 
-            //Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);
-            //SecurityContext ctx = getSecurityContext(gateway);
             Gson gson = new Gson();
             for (int i=0;i<number_of_datasets;i++) {
                 // Opener de-serialization

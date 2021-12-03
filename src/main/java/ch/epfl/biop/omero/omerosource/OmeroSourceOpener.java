@@ -21,22 +21,14 @@
  */
 package ch.epfl.biop.omero.omerosource;
 
-import IceInternal.Ex;
 import bdv.util.volatiles.SharedQueue;
 import bdv.viewer.Source;
 import bdv.viewer.SourceAndConverter;
-import ch.epfl.biop.bdv.bioformats.BioFormatsMetaDataHelper;
-import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvOpener;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.BioFormatsBdvSource;
-import ch.epfl.biop.bdv.bioformats.bioformatssource.ReaderPool;
 import ch.epfl.biop.bdv.bioformats.bioformatssource.VolatileBdvSource;
 import ch.epfl.biop.ij2command.OmeroTools;
-
-import loci.formats.*;
-import loci.formats.meta.IMetadata;
 import mpicbg.spim.data.sequence.VoxelDimensions;
 import net.imglib2.Dimensions;
-import net.imglib2.FinalInterval;
 import net.imglib2.converter.Converter;
 import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
@@ -45,16 +37,12 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedIntType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
-import ome.formats.model.IObjectContainerStore;
 import ome.units.UNITS;
-import ome.units.unit.Unit;
 import omero.ServerError;
-import omero.api.IMetadataPrx;
-import omero.api.IRenderingSettingsPrx;
 import omero.api.RawPixelsStorePrx;
 import omero.api.ResolutionDescription;
-import omero.gateway.SecurityContext;
 import omero.gateway.Gateway;
+import omero.gateway.SecurityContext;
 import omero.gateway.exception.DSOutOfServiceException;
 import omero.gateway.facility.BrowseFacility;
 import omero.gateway.facility.MetadataFacility;
@@ -64,9 +52,7 @@ import omero.gateway.model.PixelsData;
 import omero.model.*;
 import omero.model.enums.UnitsLength;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
-import sc.fiji.bdvpg.sourceandconverter.display.ColorChanger;
 
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -74,7 +60,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static ch.epfl.biop.utils.MetadataUtils.getRGBFromWavelength;
 import static omero.gateway.model.PixelsData.*;
 
 /**
@@ -177,6 +162,10 @@ public class OmeroSourceOpener {
     public String getHost() {
         return host;
     }
+    public Gateway getGateway(){ return gateway; }
+    public Long getOmeroId(){ return omeroImageID; }
+    public SecurityContext getSecurityContext() { return securityContext; }
+
     public List<ChannelData> getChannelMetadata() { return channelMetadata; }
     public RenderingDef getRenderingDef() {return renderingDef; }
     public int getNumFetcherThreads() { return numFetcherThreads; }

@@ -111,7 +111,22 @@ public abstract class OmeroSource<T extends NumericType< T >> implements Source<
         }
         return map.get(t);
     }*/
-
+    //Getters
+    public Gateway getGateway(){
+        return this.gt;
+    }
+    public SecurityContext getSecurityContext(){
+        return this.ctx;
+    }
+    public String getHost(){
+        return this.opener.getHost();
+    }
+    public long getImageID(){
+        return this.imageID;
+    }
+    public long getChannel(){
+        return this.channel_index;
+    }
 
     /**
      * The core function of the source which is implemented in subclasses
