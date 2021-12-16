@@ -111,7 +111,7 @@
 		<bigdataviewer-vistools.version>1.0.0-beta-29</bigdataviewer-vistools.version>
 		<imglib2-cache.version>1.0.0-beta-16</imglib2-cache.version>
 		<bigdataviewer-playground-display.version>0.1.8</bigdataviewer-playground-display.version>
-		<bigdataviewer-playground.version>0.3.10</bigdataviewer-playground.version>
+		<bigdataviewer-playground.version>0.4.0</bigdataviewer-playground.version>
 		<bigdataviewer-bioformats.version>0.2.22</bigdataviewer-bioformats.version>
 		<bio-formats_plugins.version>6.6.0</bio-formats_plugins.version>
 		<bigdataviewer-spimdata-extras.version>0.1.4</bigdataviewer-spimdata-extras.version>

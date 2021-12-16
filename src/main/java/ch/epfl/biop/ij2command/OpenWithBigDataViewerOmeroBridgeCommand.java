@@ -199,7 +199,7 @@ public class OpenWithBigDataViewerOmeroBridgeCommand implements Command {
             SecurityContext ctx = OmeroTools.getSecurityContext(gateway);
 
             for (String s:omeroIDstrings) {
-                int ID = Integer.valueOf(s);
+                int ID = Integer.valueOf(s.trim());
                 logger.debug("Getting opener for omero ID "+ID);
 
                 //create a new opener and modify it

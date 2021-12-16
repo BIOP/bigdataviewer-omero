@@ -32,14 +32,19 @@ import mpicbg.spim.data.sequence.MultiResolutionImgLoader;
 import net.imglib2.Volatile;
 import net.imglib2.type.Type;
 import net.imglib2.type.numeric.NumericType;
+import omero.gateway.Gateway;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 
-public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoader {
+public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoader, Closeable {
 
     public List<OmeroSourceOpener> openers;
 
@@ -131,5 +136,14 @@ public class OmeroImageLoader implements ViewerImgLoader, MultiResolutionImgLoad
     @Override
     public CacheControl getCacheControl() {
         return cache;
+    }
+
+    @Override
+    public void close() throws IOException {
+        Set<Gateway> all_gateways  = openers.stream().map(opener -> opener.getGateway()).collect(Collectors.toSet());
+        all_gateways.forEach(gateway -> {System.out.println( "Session active : "+ gateway.isConnected() );
+                                        gateway.disconnect();
+                                        System.out.println("Gateway disconnected");});
+
     }
 }
