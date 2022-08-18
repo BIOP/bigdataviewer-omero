@@ -189,9 +189,9 @@ public class OpenWithBigDataViewerOmeroBridgeCommand implements Command {
 
     public void run() {
         try{
-            if (unit=="MILLIMETER"){ unitsLength = UnitsLength.MILLIMETER;}
-            if (unit=="MICROMETER"){ unitsLength = UnitsLength.MICROMETER;}
-            if (unit=="NANOMETER"){ unitsLength = UnitsLength.NANOMETER;}
+            if (unit.equals("MILLIMETER")){ unitsLength = UnitsLength.MILLIMETER;}
+            if (unit.equals("MICROMETER")){ unitsLength = UnitsLength.MICROMETER;}
+            if (unit.equals("NANOMETER")){ unitsLength = UnitsLength.NANOMETER;}
             List<OmeroSourceOpener> openers = new ArrayList<>();
             String[] omeroIDstrings = omeroIDs.split(",");
             Gateway gateway =  OmeroTools.omeroConnect(host, port, username, password);

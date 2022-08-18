@@ -11,7 +11,7 @@
 
 	<groupId>ch.epfl.biop</groupId>
 	<artifactId>bigdataviewer-omero</artifactId>
-	<version>0.1.2-SNAPSHOT</version>
+	<version>0.1.2-SNAPSHOT-beta</version>
 
 	<name>BIOP Bigdataviewer OMERO connector</name>
 	<description>A nice project implementing an OMERO connection with ImageJ</description>

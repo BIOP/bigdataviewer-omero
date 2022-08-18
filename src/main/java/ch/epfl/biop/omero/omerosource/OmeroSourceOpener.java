@@ -51,6 +51,8 @@ import omero.gateway.model.ImageData;
 import omero.gateway.model.PixelsData;
 import omero.model.*;
 import omero.model.enums.UnitsLength;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sc.fiji.bdvpg.sourceandconverter.SourceAndConverterHelper;
 
 import java.time.Duration;
@@ -59,6 +61,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static omero.gateway.model.PixelsData.*;
 
@@ -69,14 +72,14 @@ import static omero.gateway.model.PixelsData.*;
 public class OmeroSourceOpener {
 
 
-
     public OmeroSourceOpener() {
     }
+
+    protected static Logger logger = LoggerFactory.getLogger(OmeroSourceOpener.class);
 
     // All serializable fields (fields needed to create the omeroSourceOpener)
     public String dataLocation = null; // URL or File
     public boolean useOmeroXYBlockSize = true; // Block size : use the one defined by Omero
-
     long omeroImageID;
     public String host;
     // Channels options
@@ -116,6 +119,7 @@ public class OmeroSourceOpener {
     transient List<ChannelData> channelMetadata;
     transient boolean displayInSpace;
     transient RenderingDef renderingDef;
+   // protected transient Consumer<IFormatReader> readerModifier = (e) -> {};
 
     // All get methods
     public int getSizeX(int level) { return this.imageSize.get(level)[0]; }
@@ -270,6 +274,7 @@ public class OmeroSourceOpener {
     public OmeroSourceOpener create() throws Exception {
         //TODO move it to omerosourceopener
         System.out.println("Load PixelsData...");
+        System.out.println("omeroID : "+omeroImageID);
         PixelsData pixels = OmeroTools.getPixelsDataFromOmeroID(omeroImageID, gateway, securityContext);
         System.out.println("PixelsData loaded!");
         System.out.println("Load RawPixelsStore...");
@@ -286,7 +291,7 @@ public class OmeroSourceOpener {
         this.renderingDef = gateway.getRenderingSettingsService(securityContext).getRenderingSettings(pixelsID);
 
 
-        //Optimize time if there is only one resolution level because getResolutionDescriptions() is time-consuming
+        //Optimize time if there is only one resolution level because getResolutionDescriptions() is time-consuming // TODO : WHAT ??
         if(rawPixStore.getResolutionLevels() == 1){
             imageSize.put(0, new int[]{pixels.getSizeX(), pixels.getSizeY(), pixels.getSizeZ()});
             tileSize = imageSize;
@@ -323,12 +328,28 @@ public class OmeroSourceOpener {
                                 "join fetch info.exposureTime as et " +
                                 "where info.pixels.id=" + pixels.getId(),
                         null);
+        //System.out.println("objectinfos.size() " + objectinfos.size());
         if(objectinfos.size() != 0) {
             //one plane per (c,z,t) combination: we assume that X and Y stage positions are the same in all planes and therefore take the 1st plane
             PlaneInfo planeinfo = (PlaneInfo) (objectinfos.get(0));
             //Convert the offsets in the unit given in the builder
-            Length lengthPosX = new LengthI(planeinfo.getPositionX(), this.u);
-            Length lengthPosY = new LengthI(planeinfo.getPositionY(), this.u);
+            //System.out.println("Unit u " + this.u);
+            //System.out.println("planeinfo.getPositionX() : "+planeinfo.getPositionX());
+            Length lengthPosX;
+            Length lengthPosY;
+            if(!planeinfo.getPositionX().getUnit().equals(UnitsLength.REFERENCEFRAME)){
+                lengthPosX = new LengthI(planeinfo.getPositionX(), this.u);
+                lengthPosY = new LengthI(planeinfo.getPositionY(), this.u);
+            }else{
+                logger.warn("The pixel unit is not set for the image "+this.imageName+" ; a default unit "+this.u+" has been set");
+                Length l1 = planeinfo.getPositionX();
+                Length l2 = planeinfo.getPositionY();
+                l1.setUnit(this.u);
+                l2.setUnit(this.u);
+                lengthPosX = new LengthI(l1, this.u);
+                lengthPosY = new LengthI(l2, this.u);
+            }
+
             this.stagePosX = lengthPosX.getValue();
             this.stagePosY = lengthPosY.getValue();
         } else {
@@ -337,8 +358,14 @@ public class OmeroSourceOpener {
         }
         System.out.println("SQL request completed!");
         //psizes are expressed in the unit given in the builder
-        this.psizeX = pixels.getPixelSizeX(this.u).getValue();
-        this.psizeY = pixels.getPixelSizeY(this.u).getValue();
+        this.psizeX = 1;
+        this.psizeY = 1;
+        if(pixels.getPixelSizeX(this.u) == null || pixels.getPixelSizeY(this.u) == null){
+            logger.warn("The physical pixel size is not set for image "+this.imageName+" ; a default value of 1 "+this.u+" has been set");
+        }else {
+            this.psizeX = pixels.getPixelSizeX(this.u).getValue();
+            this.psizeY = pixels.getPixelSizeY(this.u).getValue();
+        }
         //to handle 2D images
         this.psizeZ = 1;
         Length length = pixels.getPixelSizeZ(this.u);
@@ -494,6 +521,36 @@ public class OmeroSourceOpener {
         }
         return null;
     }
+
+    /*public IFormatReader getNewReader() {
+        System.out.println("Getting new reader for " + this.dataLocation);
+        IFormatReader reader = new ImageReader();
+        ((IFormatReader)reader).setFlattenedResolutions(false);
+        if (this.splitRGBChannels) {
+            reader = new ChannelSeparator((IFormatReader)reader);
+        }
+
+        Memoizer memo = new Memoizer((IFormatReader)reader);
+        IMetadata omeMetaIdxOmeXml = MetadataTools.createOMEXMLMetadata();
+        memo.setMetadataStore(omeMetaIdxOmeXml);
+        this.readerModifier.accept(memo);
+
+        try {
+            System.out.println("setId for reader " + this.dataLocation);
+            StopWatch watch = new StopWatch();
+            watch.start();
+            memo.setId(this.dataLocation);
+            watch.stop();
+            System.out.println("id set in " + (int)(watch.getTime() / 1000L) + " s");
+        } catch (FormatException var5) {
+            var5.printStackTrace();
+        } catch (IOException var6) {
+            var6.printStackTrace();
+        }
+
+        return memo;
+    }*/
+
 
     public AffineTransform3D getSourceTransform(int level) {
         AffineTransform3D transform = new AffineTransform3D();

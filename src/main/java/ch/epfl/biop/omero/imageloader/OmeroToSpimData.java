@@ -38,6 +38,7 @@ import net.imglib2.realtransform.AffineTransform3D;
 import net.imglib2.type.numeric.ARGBType;
 import ome.model.units.BigResult;
 import ome.units.UNITS;
+import omero.gateway.facility.BrowseFacility;
 import omero.gateway.model.ChannelData;
 import omero.model.ChannelBinding;
 import omero.model.enums.UnitsLength;
@@ -67,9 +68,6 @@ import static ch.epfl.biop.bdv.bioformats.BioFormatsMetaDataHelper.getColorFromW
 
 public class OmeroToSpimData {
 
-
-
-
     int viewSetupCounter = 0;
     int openerIdxCounter = 0;
     int maxTimepoints = -1;
@@ -82,7 +80,7 @@ public class OmeroToSpimData {
     Map<Integer, OpenerIdxChannel> viewSetupToOpenerIdxChannel = new HashMap<>();
 
     public AbstractSpimData getSpimDataInstance(List<OmeroSourceOpener> openers) {
-        openers.forEach(o -> o.ignoreMetadata()); // necessary for spimdata
+        openers.forEach(OmeroSourceOpener::ignoreMetadata); // necessary for spimdata
         viewSetupCounter = 0;
         openerIdxCounter = 0;
         maxTimepoints = -1;
@@ -106,10 +104,13 @@ public class OmeroToSpimData {
                 if (opener.getSizeT() > maxTimepoints) {
                     maxTimepoints = opener.getSizeT();
                 }
+
                 String imageName = opener.getImageName();
+
                 Dimensions dims = opener.getDimensions();
                 //logger.debug("X:"+dims.dimension(0)+" Y:"+dims.dimension(1)+" Z:"+dims.dimension(2));
                 VoxelDimensions voxDims = opener.getVoxelDimensions();
+
                 List<ChannelData> channelMetadata = opener.getChannelMetadata();
                 // Register Setups (one per channel and one per timepoint)
                 for (int channelIdx=0; channelIdx<opener.getSizeC(); channelIdx++) {
@@ -162,6 +163,7 @@ public class OmeroToSpimData {
             for (OmeroSourceOpener opener:openers) {
                 inputFilesArray.add(opener.getDataLocation());
             }
+
             List<TimePoint> timePoints = new ArrayList<>();
             IntStream.range(0,maxTimepoints).forEach(tp -> timePoints.add(new TimePoint(tp)));
 
@@ -198,7 +200,6 @@ public class OmeroToSpimData {
                         .filter(viewSetupId -> (viewSetupToOpenerIdxChannel.get(viewSetupId).openerIdx == oIdx))
                         .forEach(viewSetupId -> {
                             if (iTp.getId()<nTimepoints) {
-
                                 registrations.add(new ViewRegistration(iTp.getId(), viewSetupId, rootTransform));
                             } else {
                                 missingViews.add(new ViewId(iTp.getId(), viewSetupId));
