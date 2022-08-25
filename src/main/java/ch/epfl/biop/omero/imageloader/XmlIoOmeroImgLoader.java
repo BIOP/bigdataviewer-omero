@@ -53,7 +53,7 @@ public class XmlIoOmeroImgLoader implements XmlIoBasicImgLoader<OmeroImageLoader
     public static final String CACHE_NUM_PRIORITIES = "num_priorities";
     public static final String DATASET_NUMBER_TAG = "dataset_number";
 
-    Map<String, GatewaySecurityContext> hostToGatewayCtx = new HashMap<String, GatewaySecurityContext>();
+    Map<String, OmeroTools.GatewaySecurityContext> hostToGatewayCtx = new HashMap<String, OmeroTools.GatewaySecurityContext>();
 
     @Override
     public Element toXml(OmeroImageLoader imgLoader, File basePath) {
@@ -101,7 +101,7 @@ public class XmlIoOmeroImgLoader implements XmlIoBasicImgLoader<OmeroImageLoader
                 if (!hostToGatewayCtx.containsKey(opener.getHost())) {
                     // No : add it in the channel hashmap
                     //Get credentials
-                    String username = (String)JOptionPane.showInputDialog(
+                    /*String username = (String)JOptionPane.showInputDialog(
                             null,
                             "Enter Your OMERO Username: ", null);
                     JPasswordField jpf = new JPasswordField(24);
@@ -113,11 +113,17 @@ public class XmlIoOmeroImgLoader implements XmlIoBasicImgLoader<OmeroImageLoader
 
                     for (int j=0;j<chArray.length;j++){
                         chArray[j] = 0;
-                    }
+                    }*/
+
+                    Boolean onlyCredentials = false;
+                    String[] credentials = OmeroTools.getOmeroConnectionInputParameters(onlyCredentials);
+                    String username = credentials[0];
+                    String password = credentials[1];
+                    credentials = new String[]{};
 
                     Gateway gateway =  OmeroTools.omeroConnect(opener.getHost(), port, username, password);
-                    SecurityContext ctx = getSecurityContext(gateway);
-                    GatewaySecurityContext gtCtx = new GatewaySecurityContext(gateway,ctx);
+                    SecurityContext ctx = OmeroTools.getSecurityContext(gateway);
+                    OmeroTools.GatewaySecurityContext gtCtx = new OmeroTools.GatewaySecurityContext(opener.getHost(), port, gateway,ctx);
                     hostToGatewayCtx.put(opener.getHost(),gtCtx);
                 }
                 opener.gateway(hostToGatewayCtx.get(opener.getHost()).gateway)
@@ -135,7 +141,7 @@ public class XmlIoOmeroImgLoader implements XmlIoBasicImgLoader<OmeroImageLoader
         }
     }
 
-    public static class GatewaySecurityContext {
+    /*public static class GatewaySecurityContext {
         public Gateway gateway;
         public SecurityContext ctx;
 
@@ -143,5 +149,5 @@ public class XmlIoOmeroImgLoader implements XmlIoBasicImgLoader<OmeroImageLoader
             this.gateway = gateway;
             this.ctx = ctx;
         }
-    }
+    }*/
 }

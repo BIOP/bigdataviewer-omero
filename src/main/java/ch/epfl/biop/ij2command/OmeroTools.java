@@ -30,8 +30,11 @@ import omero.gateway.model.ImageData;
 import omero.gateway.model.PixelsData;
 import omero.log.SimpleLogger;
 
+import javax.swing.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 
 public class OmeroTools {
@@ -96,4 +99,77 @@ public class OmeroTools {
 
     }
 
+   /* public static String[] getUserCredentials(){
+        //Get username
+        String username = (String) JOptionPane.showInputDialog(null, "Enter Your OMERO Username: ", null);
+
+        // get password
+        JPasswordField jpf = new JPasswordField(24);
+        Box box = Box.createHorizontalBox();
+        box.add(jpf);
+        JOptionPane.showConfirmDialog(null, box, "Enter Your OMERO Password: ", JOptionPane.OK_CANCEL_OPTION);
+        char[] chArray = jpf.getPassword();
+        String password = new String(chArray);
+        Arrays.fill(chArray, (char) 0);
+
+        return new String[]{username,password};
+    }*/
+
+    public static String[] getOmeroConnectionInputParameters(boolean onlyCredentials){
+
+        JTextField host = new JTextField("omero-server.epfl.ch",20);
+        JSpinner port = new JSpinner();
+        port.setValue(4064);
+        JTextField username = new JTextField(50);
+        JPasswordField jpf = new JPasswordField(24);
+
+        JPanel myPanel = new JPanel();
+        myPanel.setLayout(new BoxLayout(myPanel, BoxLayout.Y_AXIS));
+        if(!onlyCredentials) {
+            myPanel.add(new JLabel("host"));
+            myPanel.add(host);
+            myPanel.add(Box.createVerticalStrut(15)); // a spacer
+            myPanel.add(new JLabel("port"));
+            myPanel.add(port);
+            myPanel.add(Box.createVerticalStrut(15)); // a spacer
+        }
+
+        myPanel.add(new JLabel("Username"));
+        myPanel.add(username);
+        myPanel.add(Box.createVerticalStrut(15)); // a spacer
+        myPanel.add(new JLabel("Password"));
+        myPanel.add(jpf);
+
+        int result = JOptionPane.showConfirmDialog(null, myPanel,
+                "Please enter OMERO connection input parameters", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            ArrayList<String> omeroParameters = new ArrayList<>();
+            if(!onlyCredentials) {
+                omeroParameters.add(host.getText());
+                omeroParameters.add(port.getValue().toString());
+            }
+            omeroParameters.add(username.getText());
+            char[] chArray = jpf.getPassword();
+            omeroParameters.add(new String(chArray));
+            Arrays.fill(chArray, (char) 0);
+
+            String[] omeroParametersArray = new String[omeroParameters.size()];
+            return omeroParameters.toArray(omeroParametersArray);
+        }
+        return  null;
+    }
+
+    public static class GatewaySecurityContext {
+        public Gateway gateway;
+        public SecurityContext ctx;
+        public String host;
+        public int port;
+
+        public GatewaySecurityContext(String host, int port, Gateway gateway,SecurityContext ctx) {
+            this.gateway = gateway;
+            this.ctx = ctx;
+            this.host = host;
+            this.port = port;
+        }
+    }
 }
