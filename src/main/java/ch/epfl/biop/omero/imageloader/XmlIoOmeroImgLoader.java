@@ -23,7 +23,6 @@ package ch.epfl.biop.omero.imageloader;
 import ch.epfl.biop.ij2command.OmeroTools;
 import ch.epfl.biop.omero.omerosource.OmeroSourceOpener;
 import com.google.gson.Gson;
-import ij.IJ;
 import mpicbg.spim.data.XmlHelpers;
 import mpicbg.spim.data.generic.sequence.AbstractSequenceDescription;
 import mpicbg.spim.data.generic.sequence.ImgLoaderIo;
@@ -32,15 +31,12 @@ import omero.gateway.Gateway;
 import omero.gateway.SecurityContext;
 import org.jdom2.Element;
 
-import javax.swing.*;
-import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static ch.epfl.biop.ij2command.OmeroTools.getSecurityContext;
 import static mpicbg.spim.data.XmlKeys.IMGLOADER_FORMAT_ATTRIBUTE_NAME;
 
 
@@ -99,30 +95,19 @@ public class XmlIoOmeroImgLoader implements XmlIoBasicImgLoader<OmeroImageLoader
                 OmeroSourceOpener opener = gson.fromJson(jsonInString, OmeroSourceOpener.class);
 
                 if (!hostToGatewayCtx.containsKey(opener.getHost())) {
-                    // No : add it in the channel hashmap
+
                     //Get credentials
-                    /*String username = (String)JOptionPane.showInputDialog(
-                            null,
-                            "Enter Your OMERO Username: ", null);
-                    JPasswordField jpf = new JPasswordField(24);
-                    Box box = Box.createHorizontalBox();
-                    box.add(jpf);
-                    JOptionPane.showConfirmDialog(null, box, "Enter Your OMERO Password: ", JOptionPane.OK_CANCEL_OPTION);
-                    char[] chArray = jpf.getPassword();
-                    String password = new String (chArray);
-
-                    for (int j=0;j<chArray.length;j++){
-                        chArray[j] = 0;
-                    }*/
-
                     Boolean onlyCredentials = false;
                     String[] credentials = OmeroTools.getOmeroConnectionInputParameters(onlyCredentials);
                     String username = credentials[0];
                     String password = credentials[1];
                     credentials = new String[]{};
 
+                    // connect to OMERO
                     Gateway gateway =  OmeroTools.omeroConnect(opener.getHost(), port, username, password);
                     SecurityContext ctx = OmeroTools.getSecurityContext(gateway);
+
+                    //add it in the channel hashmap
                     OmeroTools.GatewaySecurityContext gtCtx = new OmeroTools.GatewaySecurityContext(opener.getHost(), port, gateway,ctx);
                     hostToGatewayCtx.put(opener.getHost(),gtCtx);
                 }
@@ -140,14 +125,4 @@ public class XmlIoOmeroImgLoader implements XmlIoBasicImgLoader<OmeroImageLoader
             throw new RuntimeException( e );
         }
     }
-
-    /*public static class GatewaySecurityContext {
-        public Gateway gateway;
-        public SecurityContext ctx;
-
-        public GatewaySecurityContext(Gateway gateway,SecurityContext ctx) {
-            this.gateway = gateway;
-            this.ctx = ctx;
-        }
-    }*/
 }

@@ -34,7 +34,6 @@ import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 
 public class OmeroTools {
@@ -99,30 +98,16 @@ public class OmeroTools {
 
     }
 
-   /* public static String[] getUserCredentials(){
-        //Get username
-        String username = (String) JOptionPane.showInputDialog(null, "Enter Your OMERO Username: ", null);
-
-        // get password
-        JPasswordField jpf = new JPasswordField(24);
-        Box box = Box.createHorizontalBox();
-        box.add(jpf);
-        JOptionPane.showConfirmDialog(null, box, "Enter Your OMERO Password: ", JOptionPane.OK_CANCEL_OPTION);
-        char[] chArray = jpf.getPassword();
-        String password = new String(chArray);
-        Arrays.fill(chArray, (char) 0);
-
-        return new String[]{username,password};
-    }*/
-
     public static String[] getOmeroConnectionInputParameters(boolean onlyCredentials){
 
+        // build the gui
         JTextField host = new JTextField("omero-server.epfl.ch",20);
         JSpinner port = new JSpinner();
         port.setValue(4064);
         JTextField username = new JTextField(50);
         JPasswordField jpf = new JPasswordField(24);
 
+        // build the main window
         JPanel myPanel = new JPanel();
         myPanel.setLayout(new BoxLayout(myPanel, BoxLayout.Y_AXIS));
         if(!onlyCredentials) {
@@ -140,6 +125,7 @@ public class OmeroTools {
         myPanel.add(new JLabel("Password"));
         myPanel.add(jpf);
 
+        // get results
         int result = JOptionPane.showConfirmDialog(null, myPanel,
                 "Please enter OMERO connection input parameters", JOptionPane.OK_CANCEL_OPTION);
         if (result == JOptionPane.OK_OPTION) {
