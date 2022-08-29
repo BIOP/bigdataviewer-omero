@@ -30,7 +30,9 @@ import omero.gateway.model.ImageData;
 import omero.gateway.model.PixelsData;
 import omero.log.SimpleLogger;
 
+import javax.swing.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 
 
@@ -96,4 +98,64 @@ public class OmeroTools {
 
     }
 
+    public static String[] getOmeroConnectionInputParameters(boolean onlyCredentials){
+
+        // build the gui
+        JTextField host = new JTextField("omero-server.epfl.ch",20);
+        JSpinner port = new JSpinner();
+        port.setValue(4064);
+        JTextField username = new JTextField(50);
+        JPasswordField jpf = new JPasswordField(24);
+
+        // build the main window
+        JPanel myPanel = new JPanel();
+        myPanel.setLayout(new BoxLayout(myPanel, BoxLayout.Y_AXIS));
+        if(!onlyCredentials) {
+            myPanel.add(new JLabel("host"));
+            myPanel.add(host);
+            myPanel.add(Box.createVerticalStrut(15)); // a spacer
+            myPanel.add(new JLabel("port"));
+            myPanel.add(port);
+            myPanel.add(Box.createVerticalStrut(15)); // a spacer
+        }
+
+        myPanel.add(new JLabel("Username"));
+        myPanel.add(username);
+        myPanel.add(Box.createVerticalStrut(15)); // a spacer
+        myPanel.add(new JLabel("Password"));
+        myPanel.add(jpf);
+
+        // get results
+        int result = JOptionPane.showConfirmDialog(null, myPanel,
+                "Please enter OMERO connection input parameters", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            ArrayList<String> omeroParameters = new ArrayList<>();
+            if(!onlyCredentials) {
+                omeroParameters.add(host.getText());
+                omeroParameters.add(port.getValue().toString());
+            }
+            omeroParameters.add(username.getText());
+            char[] chArray = jpf.getPassword();
+            omeroParameters.add(new String(chArray));
+            Arrays.fill(chArray, (char) 0);
+
+            String[] omeroParametersArray = new String[omeroParameters.size()];
+            return omeroParameters.toArray(omeroParametersArray);
+        }
+        return  null;
+    }
+
+    public static class GatewaySecurityContext {
+        public Gateway gateway;
+        public SecurityContext ctx;
+        public String host;
+        public int port;
+
+        public GatewaySecurityContext(String host, int port, Gateway gateway,SecurityContext ctx) {
+            this.gateway = gateway;
+            this.ctx = ctx;
+            this.host = host;
+            this.port = port;
+        }
+    }
 }
